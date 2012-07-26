@@ -12,7 +12,6 @@ from .utils import copy_fields, get_content_type
 EMPTY_ACCESSOR = ([], None, '')
 
 class BasePolymorphicModel(models.Model):
-
     class Meta:
         abstract = True
 
@@ -20,35 +19,29 @@ class BasePolymorphicModel(models.Model):
         if to is None:
             content_type = getattr(self, self.content_type_field_name)
             to = content_type.model_class()
-
         attrs, proxy, _lookup = self._meta._subclass_accessors.get(to, EMPTY_ACCESSOR)
-
         # Cast to the right concrete model by going up in the 
         # SingleRelatedObjectDescriptor chain
         type_casted = self
         for attr in attrs:
             type_casted = getattr(type_casted, attr)
-
         # If it's a proxy model we make sure to type cast it
         if proxy:
             type_casted = copy_fields(type_casted, proxy)
-
+        # Ensure type casting worked correctly
         if not isinstance(type_casted, to):
             raise TypeError("Failed to type cast %s to %s" % (self, to))
-
         return type_casted
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            content_type = get_content_type(self, self._state.db)
+            content_type = get_content_type(self.__class__, self._state.db)
             setattr(self, self.content_type_field_name, content_type)
         return super(BasePolymorphicModel, self).save(*args, **kwargs)
 
 
 class PolymorphicModel(BasePolymorphicModel):
-
     content_type_field_name = 'content_type'
-
     content_type = models.ForeignKey(ContentType)
 
     objects = PolymorphicManager()

@@ -10,7 +10,7 @@ env:
   - DJANGO="https://github.com/django/django/tarball/master"
 
 install:
-  - pip install $DJANGO --use-mirrors
+  - pip install $DJANGO argparse --use-mirrors
 
 script:
   - python runtests.py

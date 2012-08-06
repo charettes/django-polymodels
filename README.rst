@@ -20,8 +20,6 @@ Usage
 *****
 You subclass ``PolymorphicModel`` which is an abstract model class.
 
-.. _models:
-
 ::
     
     from django.db import models
@@ -68,9 +66,9 @@ Or directly from subclasses managers:
 >>> Reptile.objects.select_subclasses(Snake)
 [<Snake: snake>]
 
-Note that you can also retreive original results by the ``select_subclasses`` call.
+Note that you can also retreive original results by avoiding the ``select_subclasses`` call.
 
->>> Animal.objects.select_subclasses()
+>>> Animal.objects.all()
 [<Animal: animal>, <Animal: mammal>, <Animal: reptile>, <Animal: snake>]
 
 Each instance of ``PolymorphicModel`` has a ``type_cast`` method that knows how to convert itself to the correct ``ContentType``.
@@ -82,7 +80,7 @@ Each instance of ``PolymorphicModel`` has a ``type_cast`` method that knows how 
 >>> animal_snake.type_cast(Reptile)
 <Reptile: snake>
 
-If the ``PolymorphicModel.content_type`` fields conflicts with one of your existing fields you just have to subclass ``polymodels.models.BasePolymorphicModel`` instead. Just don't forget to indicates which field it should use instead by defining a ``content_type_field_name'`` attribute on you model. This field should be a ``ForeignKey`` to ``ContentType``::
+If the ``PolymorphicModel.content_type`` fields conflicts with one of your existing fields you just have to subclass ``polymodels.models.BasePolymorphicModel`` instead. Just don't forget to indicates which field it should use instead by defining a ``content_type_field_name`` attribute on you model. This field should be a ``ForeignKey`` to ``ContentType``::
 
     from django.contrib.contenttypes.models import ContentType
     from django.db import models
@@ -102,16 +100,16 @@ Under the hood ``select_subclasses`` calls ``seleted_related`` to avoid unnecess
 Caution
 *******
 
-Until `#16572`_ it's not possible to issue a ``select_related`` over multiple one-to-one relationships. For example, given the models defined `above`_, ``Animal.objects.select_related('mammal__dog')`` would throw a strange ``TypeError``. To avoid this issue, ``select_subclasses`` limits such lookups to one level depth.
+Until `#16572`_ it's not possible to issue a ``select_related`` over multiple one-to-one relationships. For example, given the models defined `above`_, ``Animal.objects.select_related('mammal__dog')`` would throw a strange ``TypeError``. To avoid this issue, ``select_subclasses`` limits such lookups to one level deep.
 
 .. _#16572: https://code.djangoproject.com/ticket/16572
-.. _above: #models
+.. _above: #usage
 
 ******************
 Note of the author
 ******************
 
-I'm aware there's already some projects tackling this issue, including `django-polymorphic`_. However I wanted to try implementing this feature in a lightweight way: no ``__metaclass___`` or ``__init__`` overrides. Plus this was really just an extraction of `django-mutant`_'s own mecanism of handling this since I needed it in another project.
+I'm aware there's already some projects tackling this issue, including `django-polymorphic`_. However I wanted to try implementing this feature in a lightweight way: no ``__metaclass__`` or ``__init__`` overrides. Plus this was really just an extraction of `django-mutant`_'s own mecanism of handling this since I needed it in another project.
 
 .. _django-polymorphic: https://github.com/chrisglass/django_polymorphic
 .. _django-mutant: https://github.com/charettes/django-mutant

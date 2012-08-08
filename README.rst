@@ -11,17 +11,21 @@ Installation
 
 >>> pip install polymodels
 
-Make sure ``'django.contrib.contenttypes'`` and ``'polymodels'`` are in your `INSTALLED_APPS`::
+Make sure ``'django.contrib.contenttypes'`` and ``'polymodels'`` are in
+your `INSTALLED_APPS`
+
+::
 
     INSTALLED_APPS += ('django.contrib.contenttypes', 'polymodels')
 
 *****
 Usage
 *****
-You subclass ``PolymorphicModel`` which is an abstract model class.
+
+Subclass ``PolymorphicModel``, an abstract model class.
 
 ::
-    
+
     from django.db import models
     from polymodels.models import PolymorphicModel
 
@@ -44,34 +48,39 @@ You subclass ``PolymorphicModel`` which is an abstract model class.
         class Meta:
             proxy = True
 
-Objects are created the same way as usual and their associated ``ContentType`` is saved automatically.
+Objects are created the same way as usual and their associated ``ContentType``
+is saved automatically:
 
 >>> animal = Animal.objects.create(name='animal')
 >>> mammal = Mammal.objects.create(name='mammal')
 >>> reptile = Reptile.objects.create(name='reptile')
 >>> snake = Snake.objects.create(name='snake')
 
-To retreive *type casted* instances from the ``Animal.objects`` manager you just have to use the ``select_subclasses`` method:
+To retreive *type casted* instances from the ``Animal.objects`` manager you just
+have to use the ``select_subclasses`` method.
 
 >>> Animal.objects.select_subclasses()
 [<Animal: animal>, <Mammal: mammal>, <Reptile: reptile>, <Snake: snake>]
 
-You can also retreive a subset of the subclasses by passing them as arguments to ``select_subclass``:
+You can also retreive a subset of the subclasses by passing them as arguments to
+``select_subclass``.
 
 >>> Animal.objects.select_subclasses(Reptile)
 [<Reptile: reptile>, <Snake: snake>]
 
-Or directly from subclasses managers:
+Or directly from subclasses managers.
 
 >>> Reptile.objects.select_subclasses(Snake)
 [<Snake: snake>]
 
-Note that you can also retreive original results by avoiding the ``select_subclasses`` call.
+Note that you can also retreive original results by avoiding the
+``select_subclasses`` call.
 
 >>> Animal.objects.all()
 [<Animal: animal>, <Animal: mammal>, <Animal: reptile>, <Animal: snake>]
 
-Each instance of ``PolymorphicModel`` has a ``type_cast`` method that knows how to convert itself to the correct ``ContentType``.
+Each instance of ``PolymorphicModel`` has a ``type_cast`` method that knows how
+to convert itself to the correct ``ContentType``.
 
 >>> animal_snake = Animal.objects.get(pk=snake.pk)
 <Animal: snake>
@@ -80,7 +89,14 @@ Each instance of ``PolymorphicModel`` has a ``type_cast`` method that knows how 
 >>> animal_snake.type_cast(Reptile)
 <Reptile: snake>
 
-If the ``PolymorphicModel.content_type`` fields conflicts with one of your existing fields you just have to subclass ``polymodels.models.BasePolymorphicModel`` instead. Just don't forget to indicates which field it should use instead by defining a ``content_type_field_name`` attribute on you model. This field should be a ``ForeignKey`` to ``ContentType``::
+If the ``PolymorphicModel.content_type`` fields conflicts with one of your
+existing fields you just have to subclass
+``polymodels.models.BasePolymorphicModel`` instead. Just don't forget to
+specify which field it should use instead by defining a
+``content_type_field_name`` attribute on you model. This field must be a
+``ForeignKey`` to ``ContentType``.
+
+::
 
     from django.contrib.contenttypes.models import ContentType
     from django.db import models
@@ -94,13 +110,21 @@ If the ``PolymorphicModel.content_type`` fields conflicts with one of your exist
 How it works
 ************
 
-Under the hood ``select_subclasses`` calls ``seleted_related`` to avoid unnecessary queries and ``filter`` if you pass some classes to it. On querset iteration, the fetched instanced are converted to their correct type by calling ``BasePolymorphicModel.type_cast``. Note that those lookups are cached on class creation to avoid computing them on every single query.
+Under the hood ``select_subclasses`` calls ``seleted_related`` to avoid
+unnecessary queries and ``filter`` if you pass some classes to it. On querset
+iteration, the fetched instanced are converted to their correct type by calling
+``BasePolymorphicModel.type_cast``. Note that those lookups are cached on class
+creation to avoid computing them on every single query.
 
 *******
 Caution
 *******
 
-Until `#16572`_ it's not possible to issue a ``select_related`` over multiple one-to-one relationships. For example, given the models defined `above`_, ``Animal.objects.select_related('mammal__dog')`` would throw a strange ``TypeError``. To avoid this issue, ``select_subclasses`` limits such lookups to one level deep.
+Until `#16572`_ is fixed it's not possible to issue a ``select_related`` over
+multipleone-to-one relationships. For example, given the models defined
+`above`_, ``Animal.objects.select_related('mammal__dog')`` would throw a strange
+``TypeError``. To work around this issue, ``select_subclasses`` limits such
+lookups to one level deep.
 
 .. _#16572: https://code.djangoproject.com/ticket/16572
 .. _above: #usage
@@ -109,10 +133,27 @@ Until `#16572`_ it's not possible to issue a ``select_related`` over multiple on
 Note of the author
 ******************
 
-I'm aware there's already some projects tackling this issue, including `django-polymorphic`_. However I wanted to try implementing this feature in a lightweight way: no ``__metaclass__`` or ``__init__`` overrides. Plus this was really just an extraction of `django-mutant`_'s own mecanism of handling this since I needed it in another project.
+I'm aware there's already plenty of existing projects tackling the whole
+**model-inheritance-type-casting-thing** such as `django-polymorphic`_. However
+I wanted to implement this feature in a lightweight way: no
+``__metaclass__`` or ``__init__`` overrides while using django's public API as
+much as possible. In the end, this was really just an extraction of
+`django-mutant`_'s own mecanism of handling this since I needed it as a
+standalone app for another project.
 
 .. _django-polymorphic: https://github.com/chrisglass/django_polymorphic
 .. _django-mutant: https://github.com/charettes/django-mutant
+
+
+**********
+Contribute
+**********
+
+If you happen to encounter a bug or would like to suggest a feature addition
+please `file an issue`_ or `create a pull request`_ containing **tests**.
+
+.. _file an issue: https://github.com/charettes/django-polymodels/issues
+.. _create a pull request: https://github.com/charettes/django-polymodels/pulls
 
 *******
 Credits

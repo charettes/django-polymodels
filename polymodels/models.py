@@ -17,8 +17,7 @@ class BasePolymorphicModel(models.Model):
 
     def type_cast(self, to=None):
         if to is None:
-            content_type = getattr(self, self.content_type_field_name)
-            to = content_type.model_class()
+            to = getattr(self, self.CONTENT_TYPE_FIELD).model_class()
         attrs, proxy, _lookup = self._meta._subclass_accessors.get(to, EMPTY_ACCESSOR)
         # Cast to the right concrete model by going up in the 
         # SingleRelatedObjectDescriptor chain
@@ -36,12 +35,12 @@ class BasePolymorphicModel(models.Model):
     def save(self, *args, **kwargs):
         if self.pk is None:
             content_type = get_content_type(self.__class__, self._state.db)
-            setattr(self, self.content_type_field_name, content_type)
+            setattr(self, self.CONTENT_TYPE_FIELD, content_type)
         return super(BasePolymorphicModel, self).save(*args, **kwargs)
 
 
 class PolymorphicModel(BasePolymorphicModel):
-    content_type_field_name = 'content_type'
+    CONTENT_TYPE_FIELD = 'content_type'
     content_type = models.ForeignKey(ContentType)
 
     objects = PolymorphicManager()
@@ -54,15 +53,15 @@ def prepare_polymorphic_model(sender, **kwargs):
     if issubclass(sender, BasePolymorphicModel):
         opts = sender._meta
         try:
-            content_type_field_name = getattr(sender, 'content_type_field_name')
+            content_type_field_name = getattr(sender, 'CONTENT_TYPE_FIELD')
         except AttributeError:
             raise ImproperlyConfigured('`BasePolymorphicModel` subclasses must '
-                                       'define a `content_type_field_name`.')
+                                       'define a `CONTENT_TYPE_FIELD`.')
         else:
             try:
                 content_type_field = opts.get_field(content_type_field_name)
             except FieldDoesNotExist:
-                raise ImproperlyConfigured('`%s.%s.content_type_field_name` '
+                raise ImproperlyConfigured('`%s.%s.CONTENT_TYPE_FIELD` '
                                            'points to an inexistent field "%s".'
                                            % (sender.__module__,
                                               sender.__name__,

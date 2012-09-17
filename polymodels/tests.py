@@ -1,7 +1,6 @@
 import re
 
 import django
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.test.testcases import TestCase
@@ -112,25 +111,25 @@ class BasePolymorphicModelTest(TestCase):
     def test_improperly_configured(self):
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`BasePolymorphicModel` subclasses must '
-                                       'define a `content_type_field_name`.'):
+                                       'define a `CONTENT_TYPE_FIELD`.'):
             class NoCtFieldModel(BasePolymorphicModel):
                 pass
         with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`polymodels.tests.InexistentCtFieldModel.content_type_field_name` '
+                                      '`polymodels.tests.InexistentCtFieldModel.CONTENT_TYPE_FIELD` '
                                       'points to an inexistent field "inexistent_field".'):
             class InexistentCtFieldModel(BasePolymorphicModel):
-                content_type_field_name = 'inexistent_field'
+                CONTENT_TYPE_FIELD = 'inexistent_field'
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`polymodels.tests.InvalidCtFieldModel.a_char_field` '
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFieldModel(BasePolymorphicModel):
-                content_type_field_name = 'a_char_field'
+                CONTENT_TYPE_FIELD = 'a_char_field'
                 a_char_field = models.CharField(max_length=255)
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`polymodels.tests.InvalidCtFkFieldToModel.a_fk` '
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFkFieldToModel(BasePolymorphicModel):
-                content_type_field_name = 'a_fk'
+                CONTENT_TYPE_FIELD = 'a_fk'
                 a_fk = models.ForeignKey('self')
 
     def test_type_cast(self):

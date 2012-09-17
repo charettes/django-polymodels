@@ -9,8 +9,8 @@ class PolymorphicQuerySet(models.query.QuerySet):
 
     def select_subclasses(self, *subclasses):
         self.type_cast = True
-        content_type_field_name = self.model.content_type_field_name
-        lookups = set([self.model.content_type_field_name])
+        content_type_field_name = self.model.CONTENT_TYPE_FIELD
+        lookups = set([content_type_field_name])
         opts = self.model._meta
         accessors = opts._subclass_accessors
         if subclasses:

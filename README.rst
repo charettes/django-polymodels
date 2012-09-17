@@ -91,10 +91,9 @@ to convert itself to the correct ``ContentType``.
 
 If the ``PolymorphicModel.content_type`` fields conflicts with one of your
 existing fields you just have to subclass
-``polymodels.models.BasePolymorphicModel`` instead. Just don't forget to
-specify which field it should use instead by defining a
-``content_type_field_name`` attribute on you model. This field must be a
-``ForeignKey`` to ``ContentType``.
+``polymodels.models.BasePolymorphicModel`` and specify which field *polymodels*
+should use instead by defining a ``CONTENT_TYPE_FIELD`` attribute on your model.
+This field must be a ``ForeignKey`` to ``ContentType``.
 
 ::
 
@@ -103,7 +102,7 @@ specify which field it should use instead by defining a
     from polymodels.models import BasePolymorphicModel
 
     class MyModel(BasePolymorphicModel):
-        content_type_field_name = 'polymorphic_ct'
+        CONTENT_TYPE_FIELD = 'polymorphic_ct'
         polymorphic_ct = models.ForeignKey(ContentType)
 
 ************
@@ -111,7 +110,7 @@ How it works
 ************
 
 Under the hood ``select_subclasses`` calls ``seleted_related`` to avoid
-unnecessary queries and ``filter`` if you pass some classes to it. On querset
+unnecessary queries and ``filter`` if you pass some classes to it. On queryset
 iteration, the fetched instanced are converted to their correct type by calling
 ``BasePolymorphicModel.type_cast``. Note that those lookups are cached on class
 creation to avoid computing them on every single query.

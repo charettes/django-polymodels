@@ -2,11 +2,10 @@
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
-from .utils import get_content_types
+from .utils import get_content_type, get_content_types
 
 
 class PolymorphicQuerySet(models.query.QuerySet):
-
     def select_subclasses(self, *subclasses):
         self.type_cast = True
         content_type_field_name = self.model.CONTENT_TYPE_FIELD
@@ -28,6 +27,11 @@ class PolymorphicQuerySet(models.query.QuerySet):
             lookups.update(accessor[2] for accessor in accessors.itervalues())
             qs = self
         return qs.select_related(*lookups)
+
+    def exclude_subclasses(self):
+        content_type_field_name = self.model.CONTENT_TYPE_FIELD
+        model_content_type = get_content_type(self.model)
+        return self.filter(**{content_type_field_name: model_content_type})
 
     def _clone(self, **kwargs):
         kwargs.update(type_cast=getattr(self, 'type_cast', False))
@@ -59,3 +63,6 @@ class PolymorphicManager(models.Manager):
 
     def select_subclasses(self, *subclasses):
         return self.get_query_set().select_subclasses(*subclasses)
+
+    def exclude_subclasses(self):
+        return self.get_query_set().exclude_subclasses()

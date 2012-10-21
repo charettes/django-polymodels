@@ -97,6 +97,20 @@ class PolymorphicQuerySetTest(TestCase):
                                      ['<BigSnake: big snake>',
                                       '<HugeSnake: huge snake>'])
 
+    def test_exclude_subclasses(self):
+        Animal.objects.create(name='animal')
+        Mammal.objects.create(name='first mammal')
+        Mammal.objects.create(name='second mammal')
+        Monkey.objects.create(name='donkey kong')
+        self.assertQuerysetEqual(Animal.objects.exclude_subclasses(),
+                                 ['<Animal: animal>',])
+        self.assertQuerysetEqual(Mammal.objects.exclude_subclasses(),
+                                 ['<Mammal: first mammal>',
+                                  '<Mammal: second mammal>'])
+        self.assertQuerysetEqual(Monkey.objects.exclude_subclasses(),
+                                 ['<Monkey: donkey kong>',])
+
+
 
 class PolymorphicManagerTest(TestCase):
     def test_improperly_configured(self):

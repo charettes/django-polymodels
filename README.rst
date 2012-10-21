@@ -73,11 +73,17 @@ Or directly from subclasses managers.
 >>> Reptile.objects.select_subclasses(Snake)
 [<Snake: snake>]
 
-Note that you can also retreive original results by avoiding the
+Note that you can also retrieve original results by avoiding the
 ``select_subclasses`` call.
 
 >>> Animal.objects.all()
 [<Animal: animal>, <Animal: mammal>, <Animal: reptile>, <Animal: snake>]
+
+It's also possible to select only instances of the model to which the
+manager is attached by using the ``exclude_subclasses`` method.
+
+>>> Mammal.objects.all()
+[<Mammal: mammal>]
 
 Each instance of ``PolymorphicModel`` has a ``type_cast`` method that knows how
 to convert itself to the correct ``ContentType``.

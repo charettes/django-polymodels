@@ -6,25 +6,37 @@ from .utils import get_content_type, get_content_types
 
 
 class PolymorphicQuerySet(models.query.QuerySet):
-    def select_subclasses(self, *subclasses):
+    def select_subclasses(self, *args):
         self.type_cast = True
         content_type_field_name = self.model.CONTENT_TYPE_FIELD
         lookups = set([content_type_field_name])
         opts = self.model._meta
         accessors = opts._subclass_accessors
-        if subclasses:
-            sub_subclasses = set()
-            for subclass in subclasses:
+        if args:
+            subclasses = set()
+            # Collect all subclasses
+            for subclass in args:
                 if not issubclass(subclass, self.model):
                     raise TypeError("%r is not a subclass of %r" % (subclass,
                                                                     self.model))
-                sub_subclasses.update(subclass._meta._subclass_accessors.iterkeys())
-                lookups.add(accessors[subclass][2])
-            content_types = [ct.pk for cls, ct in get_content_types(sub_subclasses).iteritems()]
-            filters = {"%s__in" % content_type_field_name: content_types}
+                subclasses.update(subclass._meta._subclass_accessors.keys())
+            # Collect all `select_related` required lookups
+            for subclass in subclasses:
+                # Avoid collecting ourself and proxy subclasses
+                subclass_lookup = accessors[subclass][2]
+                if subclass_lookup:
+                    lookups.add(subclass_lookup)
+            # Fetch associated `ContentType` instances for filtering
+            content_types = get_content_types(subclasses)
+            filters = {"%s__in" % content_type_field_name:
+                       tuple(ct.pk for ct in content_types.values())}
             qs = self.filter(**filters)
         else:
-            lookups.update(accessor[2] for accessor in accessors.itervalues())
+            # Collect all `select_related` required lookups
+            for accessor in accessors.itervalues():
+                # Avoid collecting ourself and proxy subclasses
+                if accessor[2]:
+                    lookups.add(accessor[2])
             qs = self
         return qs.select_related(*lookups)
 

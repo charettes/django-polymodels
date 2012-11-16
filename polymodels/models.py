@@ -1,4 +1,4 @@
-
+import django
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -88,9 +88,13 @@ def prepare_polymorphic_model(sender, **kwargs):
                 if not parent_opts.abstract:
                     is_polymorphic_root = parent is sender
                     # We can't do `select_related` on multiple one-to-one
-                    # relationships...
-                    # see https://code.djangoproject.com/ticket/16572
-                    lookup = LOOKUP_SEP.join(attrs[0:1])
+                    # relationships on django < 1.6
+                    # see https://code.djangoproject.com/ticket/16572 and
+                    # https://code.djangoproject.com/ticket/13781
+                    if django.VERSION < (1, 6):
+                        lookup = LOOKUP_SEP.join(attrs[0:1])
+                    else:
+                        lookup = LOOKUP_SEP.join(attrs)
                     parent_opts._subclass_accessors[sender] = (tuple(attrs), proxy, lookup)
                     if not parent_opts.proxy:
                         # XXX: Is there a better way to get this?

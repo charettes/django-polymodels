@@ -45,9 +45,9 @@ class PolymorphicQuerySet(models.query.QuerySet):
         model_content_type = get_content_type(self.model)
         return self.filter(**{content_type_field_name: model_content_type})
 
-    def _clone(self, **kwargs):
+    def _clone(self, *args, **kwargs):
         kwargs.update(type_cast=getattr(self, 'type_cast', False))
-        return super(PolymorphicQuerySet, self)._clone(**kwargs)
+        return super(PolymorphicQuerySet, self)._clone(*args, **kwargs)
 
     def iterator(self):
         iterator = super(PolymorphicQuerySet, self).iterator()

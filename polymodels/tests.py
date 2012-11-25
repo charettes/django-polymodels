@@ -7,7 +7,6 @@ from django.test.testcases import TestCase
 
 from polymodels.managers import PolymorphicManager
 from polymodels.models import BasePolymorphicModel, PolymorphicModel
-from polymodels.utils import get_content_types
 
 
 class Animal(PolymorphicModel):

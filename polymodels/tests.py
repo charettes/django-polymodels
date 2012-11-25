@@ -1,4 +1,6 @@
+from __future__ import unicode_literals
 import re
+import sys
 
 import django
 from django.core.exceptions import ImproperlyConfigured
@@ -15,8 +17,12 @@ class Animal(PolymorphicModel):
     class Meta:
         ordering = ('id',)
 
-    def __unicode__(self):
+    def __str__(self):
         return self.name
+
+    if not sys.version_info[0] == 3:
+        __unicode__ = __str__
+        __str__ = lambda self: self.__unicode__().encode('utf-8')
 
 
 class Mammal(Animal):

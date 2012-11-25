@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -33,7 +34,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
             qs = self.filter(**filters)
         else:
             # Collect all `select_related` required lookups
-            for accessor in accessors.itervalues():
+            for accessor in accessors.values():
                 # Avoid collecting ourself and proxy subclasses
                 if accessor[2]:
                     lookups.add(accessor[2])

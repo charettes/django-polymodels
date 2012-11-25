@@ -11,6 +11,11 @@ env:
   - DJANGO="https://github.com/django/django/tarball/master"
 
 matrix:
+  include:
+    - python: 3.2
+      env: DJANGO="https://github.com/django/django/archive/stable/1.5.x.tar.gz"
+    - python: 3.2
+      env: DJANGO="https://github.com/django/django/tarball/master"
   allow_failures:
     - env: DJANGO="https://github.com/django/django/archive/stable/1.5.x.tar.gz"
     - env: DJANGO="https://github.com/django/django/tarball/master"

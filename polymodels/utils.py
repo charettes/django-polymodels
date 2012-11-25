@@ -1,7 +1,11 @@
+from __future__ import unicode_literals
 
 import django
 from django.contrib.contenttypes.models import ContentType
-from django.utils.encoding import smart_unicode
+try:
+    from django.utils.encoding import smart_text
+except ImportError:
+    from django.utils.encoding import smart_unicode as smart_text
 
 
 # Prior to #18399 being fixed there was no way to retrieve `ContentType`
@@ -47,7 +51,7 @@ else: # TODO: Remove when support for 1.4 is dropped
             ct, _created = manager.get_or_create(
                 app_label = opts.app_label,
                 model = opts.object_name.lower(),
-                defaults = {'name': smart_unicode(opts.verbose_name_raw)},
+                defaults = {'name': smart_text(opts.verbose_name_raw)},
             )
             manager._add_to_cache(manager.db, ct)
             return ct

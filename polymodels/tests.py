@@ -15,7 +15,7 @@ class Animal(PolymorphicModel):
     name = models.CharField(max_length=255)
 
     class Meta:
-        ordering = ('pk',)
+        ordering = ('id',)
 
     def __str__(self):
         return self.name
@@ -38,7 +38,7 @@ class Reptile(Animal):
 
     class Meta:
         abstract = True
-        ordering = ('pk',)
+        ordering = ('id',)
 
 
 class Snake(Reptile):

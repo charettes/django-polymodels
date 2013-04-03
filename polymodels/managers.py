@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
+import warnings
 
+import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
@@ -60,6 +62,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
             for obj in iterator:
                 yield obj
 
+
 class PolymorphicManager(models.Manager):
     use_for_related_fields = True
 
@@ -71,11 +74,23 @@ class PolymorphicManager(models.Manager):
                                        'on `BasePolymorphicModel` subclasses.')
         return super(PolymorphicManager, self).contribute_to_class(model, name)
 
-    def get_query_set(self):
+    def get_queryset(self):
         return PolymorphicQuerySet(self.model, using=self._db)
 
+    if django.VERSION < (1, 8):
+        def get_query_set(self):
+            if django.VERSION >= (1, 6):
+                warnings.warn(
+                    "`PolymorphicManager.get_query_set` is deprecated, use "
+                    "`get_queryset` instead",
+                    DeprecationWarning if django.VERSION >= (1, 7)
+                        else PendingDeprecationWarning,
+                    stacklevel=2
+                )
+            return PolymorphicManager.get_queryset(self)
+
     def select_subclasses(self, *subclasses):
-        return self.get_query_set().select_subclasses(*subclasses)
+        return self.get_queryset().select_subclasses(*subclasses)
 
     def exclude_subclasses(self):
-        return self.get_query_set().exclude_subclasses()
+        return self.get_queryset().exclude_subclasses()

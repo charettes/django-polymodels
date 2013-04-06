@@ -20,7 +20,7 @@ matrix:
     - env: DJANGO="https://github.com/django/django/tarball/master"
 
 install:
-  - pip install $DJANGO argparse --use-mirrors
+  - pip install $DJANGO argparse coverage django-coverage -q --use-mirrors
 
 script:
-  - python runtests.py
+  - python -Wall `which django-admin.py` test_coverage polymodels --pythonpath=`pwd` --settings=test_settings -v2

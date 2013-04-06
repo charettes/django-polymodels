@@ -52,7 +52,10 @@ class PolymorphicQuerySetTest(TestCase):
         if django.VERSION < (1, 6):
             animal_mammals_expected_num_queries += Monkey.objects.count()
             animal_mammals_expected_query_select_related['mammal'] = {}
-        self.assertEquals(animal_mammals.query.select_related, animal_mammals_expected_query_select_related)
+        self.assertEqual(
+            animal_mammals.query.select_related,
+            animal_mammals_expected_query_select_related
+        )
         with self.assertNumQueries(animal_mammals_expected_num_queries):
             self.assertQuerysetEqual(animal_mammals.all(),
                                      ['<Mammal: mammal>',

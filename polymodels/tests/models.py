@@ -43,6 +43,7 @@ class Reptile(Animal):
 class Snake(Reptile):
     class Meta:
         app_label = 'polymodels'
+        ordering = ('id',)
 
 
 class BigSnake(Snake):

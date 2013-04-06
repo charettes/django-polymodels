@@ -78,6 +78,7 @@ else: # TODO: Remove when support for 1.4 is dropped
         content_types.update(_get_for_concrete_models(manager, concrete_models))
         return content_types
 
+
 def copy_fields(src, to):
     """
     Returns a new instance of `to_cls` with fields data fetched from `src`.
@@ -87,3 +88,12 @@ def copy_fields(src, to):
     """
     args = tuple(getattr(src, field.attname) for field in src._meta.fields)
     return to(*args)
+
+
+# TODO: Remove when support for django < 1.6 is dropped
+_model_name_attr = 'model_name' if django.VERSION >= (1, 6) else 'module_name'
+def model_name_from_opts(opts):
+    """
+    `Options.module_name` was renamed to `model_name` in Django 1.6.
+    """
+    return getattr(opts, _model_name_attr)

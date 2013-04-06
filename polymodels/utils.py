@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import django
 from django.contrib.contenttypes.models import ContentType
+from django.db.models.base import ModelBase
 try:
     from django.utils.encoding import smart_text
 except ImportError:
@@ -90,10 +91,24 @@ def copy_fields(src, to):
     return to(*args)
 
 
-# TODO: Remove when support for django < 1.6 is dropped
-_model_name_attr = 'model_name' if django.VERSION >= (1, 6) else 'module_name'
-def model_name_from_opts(opts):
-    """
-    `Options.module_name` was renamed to `model_name` in Django 1.6.
-    """
-    return getattr(opts, _model_name_attr)
+# TODO: Remove when support for 1.5 is dropped
+if django.VERSION >= (1, 6):
+    def model_name(opts):
+        return opts.model_name
+else:
+    def model_name(opts):
+        return opts.module_name
+
+
+# TODO: Remove when support for 1.3 is dropped
+if django.VERSION >= (1, 4):
+    def proxy_for_model(model):
+        opts = model._meta
+        assert opts.proxy
+        return opts.proxy_for_model
+else:
+    def proxy_for_model(model):
+        assert model._meta.proxy
+        for base in model.__bases__:
+            if isinstance(base, ModelBase):
+                return base

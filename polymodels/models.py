@@ -11,7 +11,7 @@ except ImportError:
     from django.db.models.sql.constants import LOOKUP_SEP
 
 from .managers import PolymorphicManager
-from .utils import copy_fields, get_content_type, model_name_from_opts
+from .utils import copy_fields, get_content_type, model_name, proxy_for_model
 
 
 EMPTY_ACCESSOR = ([], None, '')
@@ -97,9 +97,9 @@ def prepare_polymorphic_model(sender, **kwargs):
                     lookup = LOOKUP_SEP.join(attrs)
                 parent_opts._subclass_accessors[sender] = (tuple(attrs), proxy, lookup)
                 if parent_opts.proxy:
-                    parents.insert(0, parent_opts.proxy_for_model)
+                    parents.insert(0, proxy_for_model(parent))
                 else:
-                    attrs.insert(0, model_name_from_opts(parent_opts))
+                    attrs.insert(0, model_name(parent_opts))
                     parents = list(parent._meta.parents.keys()) + parents
 
 models.signals.class_prepared.connect(prepare_polymorphic_model)

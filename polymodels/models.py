@@ -87,21 +87,19 @@ def prepare_polymorphic_model(sender, **kwargs):
             parent = parents.pop(0)
             if issubclass(parent, BasePolymorphicModel):
                 parent_opts = parent._meta
-                if not parent_opts.abstract:
-                    is_polymorphic_root = parent is sender
-                    # We can't do `select_related` on multiple one-to-one
-                    # relationships on django < 1.6
-                    # see https://code.djangoproject.com/ticket/16572 and
-                    # https://code.djangoproject.com/ticket/13781
-                    if django.VERSION < (1, 6):
-                        lookup = LOOKUP_SEP.join(attrs[0:1])
-                    else:
-                        lookup = LOOKUP_SEP.join(attrs)
-                    parent_opts._subclass_accessors[sender] = (tuple(attrs), proxy, lookup)
-                    if not parent_opts.proxy:
-                        # XXX: Is there a better way to get this?
-                        attrs.insert(0, parent_opts.object_name.lower())
-                parents = list(parent.__bases__) + parents # mimic mro
-        opts._is_polymorphic_root = is_polymorphic_root
+                # We can't do `select_related` on multiple one-to-one
+                # relationships on django < 1.6
+                # see https://code.djangoproject.com/ticket/16572 and
+                # https://code.djangoproject.com/ticket/13781
+                if django.VERSION < (1, 6):
+                    lookup = LOOKUP_SEP.join(attrs[0:1])
+                else:
+                    lookup = LOOKUP_SEP.join(attrs)
+                parent_opts._subclass_accessors[sender] = (tuple(attrs), proxy, lookup)
+                if parent_opts.proxy:
+                    parents.insert(0, parent_opts.proxy_for_model)
+                else:
+                    attrs.insert(0, parent_opts.module_name)
+                    parents = list(parent._meta.parents.keys()) + parents
 
 models.signals.class_prepared.connect(prepare_polymorphic_model)

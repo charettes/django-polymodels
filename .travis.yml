@@ -8,26 +8,26 @@ env:
   - DJANGO="django>=1.3,<1.4"
   - DJANGO="django>=1.4,<1.5"
   - DJANGO="django>=1.5,<1.6"
-  - DJANGO="https://github.com/django/django/tarball/1.6a1"
-  - DJANGO="https://github.com/django/django/tarball/master"
+  - DJANGO="https://github.com/django/django/archive/1.6a1.tar.gz"
+  - DJANGO="https://github.com/django/django/archive/master.tar.gz"
 
 matrix:
   include:
     - python: 3.2
       env: DJANGO="django>=1.5,<1.6"
     - python: 3.2
-      env: DJANGO="https://github.com/django/django/tarball/1.6a1"
+      env: DJANGO="https://github.com/django/django/archive/1.6a1.tar.gz"
     - python: 3.2
-      env: DJANGO="https://github.com/django/django/tarball/master"
+      env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
     - python: 3.3
       env: DJANGO="django>=1.5,<1.6"
     - python: 3.3
-      env: DJANGO="https://github.com/django/django/tarball/1.6a1"
+      env: DJANGO="https://github.com/django/django/archive/1.6a1.tar.gz"
     - python: 3.3
-      env: DJANGO="https://github.com/django/django/tarball/master"
+      env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
   allow_failures:
-    - env: DJANGO="https://github.com/django/django/tarball/1.6a1"
-    - env: DJANGO="https://github.com/django/django/tarball/master"
+    - env: DJANGO="https://github.com/django/django/archive/1.6a1.tar.gz"
+    - env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
 
 install:
   - pip install $DJANGO -q --use-mirrors

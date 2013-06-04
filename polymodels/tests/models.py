@@ -6,6 +6,13 @@ from django.db import models
 from ..models import PolymorphicModel
 
 
+class Zoo(models.Model):
+    animals = models.ManyToManyField('Animal')
+
+    class Meta:
+        app_label = 'polymodels'
+
+
 class Animal(PolymorphicModel):
     name = models.CharField(max_length=255)
 

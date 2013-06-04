@@ -5,7 +5,7 @@ import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
-from .utils import get_content_type, get_content_types
+from .utils import get_content_type, get_content_types, get_queryset
 
 
 class PolymorphicQuerySet(models.query.QuerySet):
@@ -20,8 +20,9 @@ class PolymorphicQuerySet(models.query.QuerySet):
             # Collect all subclasses
             for subclass in args:
                 if not issubclass(subclass, self.model):
-                    raise TypeError("%r is not a subclass of %r" % (subclass,
-                                                                    self.model))
+                    raise TypeError(
+                        "%r is not a subclass of %r" % (subclass, self.model)
+                    )
                 subclasses.update(subclass._meta._subclass_accessors.keys())
             # Collect all `select_related` required lookups
             for subclass in subclasses:
@@ -70,16 +71,18 @@ class PolymorphicManager(models.Manager):
         # Avoid circular reference
         from .models import BasePolymorphicModel
         if not issubclass(model, BasePolymorphicModel):
-            raise ImproperlyConfigured('`PolymorphicManager` can only be used '
-                                       'on `BasePolymorphicModel` subclasses.')
+            raise ImproperlyConfigured(
+                '`PolymorphicManager` can only be used on '
+                '`BasePolymorphicModel` subclasses.'
+            )
         return super(PolymorphicManager, self).contribute_to_class(model, name)
 
     def get_queryset(self):
         return PolymorphicQuerySet(self.model, using=self._db)
 
     if django.VERSION < (1, 8):
-        def get_query_set(self):
-            if django.VERSION >= (1, 6):
+        if django.VERSION >= (1, 6):
+            def get_query_set(self):
                 warnings.warn(
                     "`PolymorphicManager.get_query_set` is deprecated, use "
                     "`get_queryset` instead",
@@ -87,10 +90,12 @@ class PolymorphicManager(models.Manager):
                         else PendingDeprecationWarning,
                     stacklevel=2
                 )
-            return PolymorphicManager.get_queryset(self)
+                return PolymorphicManager.get_queryset(self)
+        else:
+            get_query_set = get_queryset
 
-    def select_subclasses(self, *subclasses):
-        return self.get_queryset().select_subclasses(*subclasses)
+    def select_subclasses(self, *args):
+        return get_queryset(self).select_subclasses(*args)
 
     def exclude_subclasses(self):
-        return self.get_queryset().exclude_subclasses()
+        return get_queryset(self).exclude_subclasses()

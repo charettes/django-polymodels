@@ -21,7 +21,7 @@ if django.VERSION >= (1, 5):
     def get_content_types(models, db=None):
         manager = ContentType.objects.db_manager(db)
         return manager.get_for_models(*models, for_concrete_models=False)
-else: # TODO: Remove when support for 1.4 is dropped
+else:  # TODO: Remove when support for 1.4 is dropped
     def _get_for_concrete_model(manager, model):
         return manager.get_for_model(model)
 
@@ -32,7 +32,7 @@ else: # TODO: Remove when support for 1.4 is dropped
 
         def _get_for_concrete_models(manager, models):
             return manager.get_for_models(*models)
-    else: # TODO: Remove when support for 1.3 is dropped
+    else:  # TODO: Remove when support for 1.3 is dropped
         def _get_from_cache(manager, opts):
             key = (opts.app_label, opts.object_name.lower())
             return manager.__class__._cache[manager.db][key]
@@ -50,9 +50,9 @@ else: # TODO: Remove when support for 1.4 is dropped
             return _get_from_cache(manager, opts)
         except KeyError:
             ct, _created = manager.get_or_create(
-                app_label = opts.app_label,
-                model = opts.object_name.lower(),
-                defaults = {'name': smart_text(opts.verbose_name_raw)},
+                app_label=opts.app_label,
+                model=opts.object_name.lower(),
+                defaults={'name': smart_text(opts.verbose_name_raw)},
             )
             manager._add_to_cache(manager.db, ct)
             return ct
@@ -89,6 +89,14 @@ def copy_fields(src, to):
     """
     args = tuple(getattr(src, field.attname) for field in src._meta.fields)
     return to(*args)
+
+# TODO: Remove when supports for 1.5 is dropped
+if django.VERSION >= (1, 6):
+    def get_queryset(manager, *args, **kwargs):
+        return manager.get_queryset(*args, **kwargs)
+else:
+    def get_queryset(manager, *args, **kwargs):
+        return manager.get_query_set(*args, **kwargs)
 
 
 # TODO: Remove when support for 1.5 is dropped

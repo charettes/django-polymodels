@@ -25,6 +25,9 @@ matrix:
       env: DJANGO="https://github.com/django/django/archive/1.6a1.tar.gz"
     - python: 3.3
       env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
+  exclude:
+    - python: 2.6
+      env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
   allow_failures:
     - env: DJANGO="https://github.com/django/django/archive/1.6a1.tar.gz"
     - env: DJANGO="https://github.com/django/django/archive/master.tar.gz"

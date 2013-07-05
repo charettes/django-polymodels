@@ -5,14 +5,15 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.base import ModelBase
 try:
     from django.utils.encoding import smart_text
-except ImportError:  # pragma: no cover
+except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
     from django.utils.encoding import smart_unicode as smart_text
 
 
 # Prior to #18399 being fixed there was no way to retrieve `ContentType`
 # of proxy models while caching it. This is a shim that tries to use the
 # newly introduced flag and fallback to another method.
-if django.VERSION >= (1, 5):  # pragma: no cover
+# TODO: Remove when support for Django 1.4 is dropped
+if django.VERSION >= (1, 5):
     # django 1.5 introduced the `for_concrete_models?` kwarg
     def get_content_type(model, db=None):
         manager = ContentType.objects.db_manager(db)
@@ -21,8 +22,7 @@ if django.VERSION >= (1, 5):  # pragma: no cover
     def get_content_types(models, db=None):
         manager = ContentType.objects.db_manager(db)
         return manager.get_for_models(*models, for_concrete_models=False)
-else:  # pragma: no cover
-    # TODO: Remove when support for 1.4 is dropped
+else:
     def _get_for_concrete_model(manager, model):
         return manager.get_for_model(model)
 
@@ -33,7 +33,7 @@ else:  # pragma: no cover
 
         def _get_for_concrete_models(manager, models):
             return manager.get_for_models(*models)
-    else:  # TODO: Remove when support for 1.3 is dropped
+    else:  # TODO: Remove when support for Django 1.3 is dropped
         def _get_from_cache(manager, opts):
             key = (opts.app_label, opts.object_name.lower())
             return manager.__class__._cache[manager.db][key]
@@ -91,31 +91,31 @@ def copy_fields(src, to):
     args = tuple(getattr(src, field.attname) for field in src._meta.fields)
     return to(*args)
 
-# TODO: Remove when supports for 1.5 is dropped
-if django.VERSION >= (1, 6):  # pragma: no cover
+# TODO: Remove when supports for Django 1.5 is dropped
+if django.VERSION >= (1, 6):
     def get_queryset(manager, *args, **kwargs):
         return manager.get_queryset(*args, **kwargs)
-else:  # pragma: no cover
+else:
     def get_queryset(manager, *args, **kwargs):
         return manager.get_query_set(*args, **kwargs)
 
 
-# TODO: Remove when support for 1.5 is dropped
-if django.VERSION >= (1, 6):  # pragma: no cover
+# TODO: Remove when support for Django 1.5 is dropped
+if django.VERSION >= (1, 6):
     def model_name(opts):
         return opts.model_name
-else:  # pragma: no cover
+else:
     def model_name(opts):
         return opts.module_name
 
 
-# TODO: Remove when support for 1.3 is dropped
-if django.VERSION >= (1, 4):  # pragma: no cover
+# TODO: Remove when support for Django 1.3 is dropped
+if django.VERSION >= (1, 4):
     def proxy_for_model(model):
         opts = model._meta
         assert opts.proxy
         return opts.proxy_for_model
-else:  # pragma: no cover
+else:
     def proxy_for_model(model):
         assert model._meta.proxy
         for base in model.__bases__:

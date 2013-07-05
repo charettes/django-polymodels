@@ -4,11 +4,11 @@ import django
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-from django.db.models.fields import FieldDoesNotExist
 try:
     from django.db.models.constants import LOOKUP_SEP
-except ImportError:  # pragma: no cover
+except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
     from django.db.models.sql.constants import LOOKUP_SEP
+from django.db.models.fields import FieldDoesNotExist
 
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, model_name, proxy_for_model
@@ -89,7 +89,7 @@ def prepare_polymorphic_model(sender, **kwargs):
                 # relationships on django < 1.6
                 # see https://code.djangoproject.com/ticket/16572 and
                 # https://code.djangoproject.com/ticket/13781
-                if django.VERSION < (1, 6):  # pragma: no cover
+                if django.VERSION < (1, 6):
                     lookup = LOOKUP_SEP.join(attrs[0:1])
                 else:
                     lookup = LOOKUP_SEP.join(attrs)

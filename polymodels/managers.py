@@ -80,7 +80,7 @@ class PolymorphicManager(models.Manager):
     def get_queryset(self):
         return PolymorphicQuerySet(self.model, using=self._db)
 
-    if django.VERSION < (1, 8):
+    if django.VERSION < (1, 8):  # pragma: no cover
         if django.VERSION >= (1, 6):
             def get_query_set(self):
                 warnings.warn(

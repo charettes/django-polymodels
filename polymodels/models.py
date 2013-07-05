@@ -7,7 +7,7 @@ from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 try:
     from django.db.models.constants import LOOKUP_SEP
-except ImportError:
+except ImportError:  # pragma: no cover
     from django.db.models.sql.constants import LOOKUP_SEP
 
 from .managers import PolymorphicManager
@@ -15,6 +15,7 @@ from .utils import copy_fields, get_content_type, model_name, proxy_for_model
 
 
 EMPTY_ACCESSOR = ([], None, '')
+
 
 class BasePolymorphicModel(models.Model):
     class Meta:
@@ -32,9 +33,6 @@ class BasePolymorphicModel(models.Model):
         # If it's a proxy model we make sure to type cast it
         if proxy:
             type_casted = copy_fields(type_casted, proxy)
-        # Ensure type casting worked correctly
-        if not isinstance(type_casted, to):
-            raise TypeError("Failed to type cast %s to %s" % (self, to))
         return type_casted
 
     def save(self, *args, **kwargs):
@@ -91,7 +89,7 @@ def prepare_polymorphic_model(sender, **kwargs):
                 # relationships on django < 1.6
                 # see https://code.djangoproject.com/ticket/16572 and
                 # https://code.djangoproject.com/ticket/13781
-                if django.VERSION < (1, 6):
+                if django.VERSION < (1, 6):  # pragma: no cover
                     lookup = LOOKUP_SEP.join(attrs[0:1])
                 else:
                     lookup = LOOKUP_SEP.join(attrs)

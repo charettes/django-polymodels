@@ -5,14 +5,14 @@ from django.contrib.contenttypes.models import ContentType
 from django.db.models.base import ModelBase
 try:
     from django.utils.encoding import smart_text
-except ImportError:
+except ImportError:  # pragma: no cover
     from django.utils.encoding import smart_unicode as smart_text
 
 
 # Prior to #18399 being fixed there was no way to retrieve `ContentType`
 # of proxy models while caching it. This is a shim that tries to use the
 # newly introduced flag and fallback to another method.
-if django.VERSION >= (1, 5):
+if django.VERSION >= (1, 5):  # pragma: no cover
     # django 1.5 introduced the `for_concrete_models?` kwarg
     def get_content_type(model, db=None):
         manager = ContentType.objects.db_manager(db)
@@ -21,7 +21,8 @@ if django.VERSION >= (1, 5):
     def get_content_types(models, db=None):
         manager = ContentType.objects.db_manager(db)
         return manager.get_for_models(*models, for_concrete_models=False)
-else:  # TODO: Remove when support for 1.4 is dropped
+else:  # pragma: no cover
+    # TODO: Remove when support for 1.4 is dropped
     def _get_for_concrete_model(manager, model):
         return manager.get_for_model(model)
 
@@ -91,30 +92,30 @@ def copy_fields(src, to):
     return to(*args)
 
 # TODO: Remove when supports for 1.5 is dropped
-if django.VERSION >= (1, 6):
+if django.VERSION >= (1, 6):  # pragma: no cover
     def get_queryset(manager, *args, **kwargs):
         return manager.get_queryset(*args, **kwargs)
-else:
+else:  # pragma: no cover
     def get_queryset(manager, *args, **kwargs):
         return manager.get_query_set(*args, **kwargs)
 
 
 # TODO: Remove when support for 1.5 is dropped
-if django.VERSION >= (1, 6):
+if django.VERSION >= (1, 6):  # pragma: no cover
     def model_name(opts):
         return opts.model_name
-else:
+else:  # pragma: no cover
     def model_name(opts):
         return opts.module_name
 
 
 # TODO: Remove when support for 1.3 is dropped
-if django.VERSION >= (1, 4):
+if django.VERSION >= (1, 4):  # pragma: no cover
     def proxy_for_model(model):
         opts = model._meta
         assert opts.proxy
         return opts.proxy_for_model
-else:
+else:  # pragma: no cover
     def proxy_for_model(model):
         assert model._meta.proxy
         for base in model.__bases__:

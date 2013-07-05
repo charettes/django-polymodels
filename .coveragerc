@@ -1,0 +1,4 @@
+[run]
+source = polymodels
+branch = True
+omit = polymodels/*tests*

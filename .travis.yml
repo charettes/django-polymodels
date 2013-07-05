@@ -34,4 +34,6 @@ install:
 script:
   - python -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=test_settings -v2
 
-after_success: coveralls
+after_success:
+  - coverage report -m
+  - coveralls

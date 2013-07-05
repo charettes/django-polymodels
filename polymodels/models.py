@@ -24,7 +24,7 @@ class BasePolymorphicModel(models.Model):
         if to is None:
             to = getattr(self, self.CONTENT_TYPE_FIELD).model_class()
         attrs, proxy, _lookup = self._meta._subclass_accessors.get(to, EMPTY_ACCESSOR)
-        # Cast to the right concrete model by going up in the 
+        # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
         type_casted = self
         for attr in attrs:

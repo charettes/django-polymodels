@@ -29,15 +29,9 @@ matrix:
     - env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
 
 install:
-  - pip install $DJANGO -q --use-mirrors
-  - if python --version 2>&1 >/dev/null | grep -E '^Python 2' -q;
-      then TEST='test_coverage';
-    else
-      TEST='test';
-    fi
-  - if echo $TEST | grep 'coverage' -q;
-      then pip install coverage django-coverage -q --use-mirrors;
-    fi
+  - pip install $DJANGO coveralls -q --use-mirrors
 
 script:
-  - python -Wall `which django-admin.py` $TEST polymodels --pythonpath=`pwd` --settings=test_settings -v2
+  - python -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=test_settings -v2
+
+after_success: coveralls

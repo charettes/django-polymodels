@@ -44,7 +44,7 @@ class BasePolymorphicModel(models.Model):
 
 class PolymorphicModel(BasePolymorphicModel):
     CONTENT_TYPE_FIELD = 'content_type'
-    content_type = models.ForeignKey(ContentType)
+    content_type = models.ForeignKey(ContentType, related_name='+')
 
     objects = PolymorphicManager()
 

@@ -112,3 +112,21 @@ class PolymorphicManagerTest(TestCase):
                                        'on `BasePolymorphicModel` subclasses.'):
             class NonPolymorphicModel(models.Model):
                 objects = PolymorphicManager()
+
+    def test_proxy_filtering(self):
+        """
+        Make sure managers attached to proxy models returns a queryset of
+        proxies only.
+        """
+        Snake.objects.create(name='snake', length=1)
+        BigSnake.objects.create(name='big snake', length=10)
+        HugeSnake.objects.create(name='huge snake', length=100)
+        self.assertQuerysetEqual(Snake.objects.all(),
+                                 ['<Snake: snake>',
+                                  '<Snake: big snake>',
+                                  '<Snake: huge snake>'])
+        self.assertQuerysetEqual(BigSnake.objects.all(),
+                                 ['<BigSnake: big snake>',
+                                  '<BigSnake: huge snake>'])
+        self.assertQuerysetEqual(HugeSnake.objects.all(),
+                                 ['<HugeSnake: huge snake>'])

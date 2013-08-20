@@ -30,11 +30,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
                 subclass_lookup = accessors[subclass][2]
                 if subclass_lookup:
                     lookups.add(subclass_lookup)
-            # Fetch associated `ContentType` instances for filtering
-            content_types = get_content_types(subclasses)
-            filters = {"%s__in" % content_type_field_name:
-                       tuple(ct.pk for ct in content_types.values())}
-            qs = self.filter(**filters)
+            qs = self.filter_models(*tuple(subclasses))
         else:
             # Collect all `select_related` required lookups
             for accessor in accessors.values():
@@ -43,6 +39,13 @@ class PolymorphicQuerySet(models.query.QuerySet):
                     lookups.add(accessor[2])
             qs = self
         return qs.select_related(*lookups)
+
+    def filter_models(self, *models):
+        # Fetch associated `ContentType` instances for filtering
+        content_types = tuple(get_content_types(models).values())
+        return self.filter(**{
+            "%s__in" % self.model.CONTENT_TYPE_FIELD: content_types
+        })
 
     def exclude_subclasses(self):
         content_type_field_name = self.model.CONTENT_TYPE_FIELD
@@ -78,7 +81,15 @@ class PolymorphicManager(models.Manager):
         return super(PolymorphicManager, self).contribute_to_class(model, name)
 
     def get_queryset(self):
-        return PolymorphicQuerySet(self.model, using=self._db)
+        model = self.model
+        qs = PolymorphicQuerySet(model, using=self._db)
+        opts = model._meta
+        if opts.proxy:
+            # Select only associated model and it's subclass
+            qs = qs.filter_models(
+                model, *tuple(opts._subclass_accessors.keys())
+            )
+        return qs
 
     if django.VERSION < (1, 8):
         if django.VERSION >= (1, 6):

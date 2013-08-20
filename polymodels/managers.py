@@ -9,27 +9,37 @@ from .utils import get_queryset
 
 
 class PolymorphicQuerySet(models.query.QuerySet):
-    def select_subclasses(self, *subclasses):
+    def select_subclasses(self, *models):
         self.type_cast = True
-        related = set([self.model.CONTENT_TYPE_FIELD])
+        relateds = set([self.model.CONTENT_TYPE_FIELD])
         opts = self.model._meta
         accessors = opts._subclass_accessors
-        if subclasses:
-            qs = self.filter(**self.model.subclasses_lookup(*subclasses))
+        if models:
+            subclasses = set([])
+            for model in models:
+                if not issubclass(model, self.model):
+                    raise TypeError(
+                        "%r is not a subclass of %r" % (model, self.model)
+                    )
+                subclasses.update(model._meta._subclass_accessors.keys())
             # Collect all `select_related` required lookups
             for subclass in subclasses:
                 # Avoid collecting ourself and proxy subclasses
-                subclass_lookup = accessors[subclass][2]
-                if subclass_lookup:
-                    related.add(subclass_lookup)
+                related = accessors[subclass][2]
+                if related:
+                    relateds.add(related)
+            qs = self.filter(
+                **self.model.content_type_lookup(*tuple(subclasses))
+            )
         else:
-            # Collect all `select_related` required related
+            # Collect all `select_related` required relateds
             for accessor in accessors.values():
                 # Avoid collecting ourself and proxy subclasses
+                related = accessor[2]
                 if accessor[2]:
-                    related.add(accessor[2])
+                    relateds.add(related)
             qs = self
-        return qs.select_related(*related)
+        return qs.select_related(*relateds)
 
     def exclude_subclasses(self):
         return self.filter(**self.model.content_type_lookup())

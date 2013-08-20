@@ -55,20 +55,10 @@ class BasePolymorphicModel(models.Model):
             }
 
     @classmethod
-    def subclasses_lookup(cls, *models):
-        if models:
-            subclasses = set([])
-            for model in models:
-                if not issubclass(model, cls):
-                    raise TypeError(
-                        "%r is not a subclass of %r" % (model, cls)
-                    )
-                subclasses.update(model._meta._subclass_accessors.keys())
-            return cls.content_type_lookup(*tuple(subclasses))
-        else:
-            return cls.content_type_lookup(
-                cls, *tuple(cls._meta._subclass_accessors.keys())
-            )
+    def subclasses_lookup(cls):
+        return cls.content_type_lookup(
+            cls, *tuple(cls._meta._subclass_accessors.keys())
+        )
 
 
 class PolymorphicModel(BasePolymorphicModel):

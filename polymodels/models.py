@@ -11,7 +11,8 @@ except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
 from django.db.models.fields import FieldDoesNotExist
 
 from .managers import PolymorphicManager
-from .utils import copy_fields, get_content_type, model_name, proxy_for_model
+from .utils import (copy_fields, get_content_type, get_content_types,
+    model_name, proxy_for_model)
 
 
 EMPTY_ACCESSOR = ([], None, '')
@@ -40,6 +41,34 @@ class BasePolymorphicModel(models.Model):
             content_type = get_content_type(self.__class__, self._state.db)
             setattr(self, self.CONTENT_TYPE_FIELD, content_type)
         return super(BasePolymorphicModel, self).save(*args, **kwargs)
+
+    @classmethod
+    def content_type_lookup(cls, *models):
+        if models:
+            content_types = tuple(get_content_types(models).values())
+            return {
+                "%s__in" % cls.CONTENT_TYPE_FIELD: content_types
+            }
+        else:
+            return {
+                cls.CONTENT_TYPE_FIELD: get_content_type(cls)
+            }
+
+    @classmethod
+    def subclasses_lookup(cls, *models):
+        if models:
+            subclasses = set([])
+            for model in models:
+                if not issubclass(model, cls):
+                    raise TypeError(
+                        "%r is not a subclass of %r" % (model, cls)
+                    )
+                subclasses.update(model._meta._subclass_accessors.keys())
+            return cls.content_type_lookup(*tuple(subclasses))
+        else:
+            return cls.content_type_lookup(
+                cls, *tuple(cls._meta._subclass_accessors.keys())
+            )
 
 
 class PolymorphicModel(BasePolymorphicModel):

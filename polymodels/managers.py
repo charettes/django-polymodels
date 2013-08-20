@@ -5,52 +5,34 @@ import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
-from .utils import get_content_type, get_content_types, get_queryset
+from .utils import get_queryset
 
 
 class PolymorphicQuerySet(models.query.QuerySet):
-    def select_subclasses(self, *args):
+    def select_subclasses(self, *subclasses):
         self.type_cast = True
-        content_type_field_name = self.model.CONTENT_TYPE_FIELD
-        lookups = set([content_type_field_name])
+        related = set([self.model.CONTENT_TYPE_FIELD])
         opts = self.model._meta
         accessors = opts._subclass_accessors
-        if args:
-            subclasses = set()
-            # Collect all subclasses
-            for subclass in args:
-                if not issubclass(subclass, self.model):
-                    raise TypeError(
-                        "%r is not a subclass of %r" % (subclass, self.model)
-                    )
-                subclasses.update(subclass._meta._subclass_accessors.keys())
+        if subclasses:
+            qs = self.filter(**self.model.subclasses_lookup(*subclasses))
             # Collect all `select_related` required lookups
             for subclass in subclasses:
                 # Avoid collecting ourself and proxy subclasses
                 subclass_lookup = accessors[subclass][2]
                 if subclass_lookup:
-                    lookups.add(subclass_lookup)
-            qs = self.filter_models(*tuple(subclasses))
+                    related.add(subclass_lookup)
         else:
-            # Collect all `select_related` required lookups
+            # Collect all `select_related` required related
             for accessor in accessors.values():
                 # Avoid collecting ourself and proxy subclasses
                 if accessor[2]:
-                    lookups.add(accessor[2])
+                    related.add(accessor[2])
             qs = self
-        return qs.select_related(*lookups)
-
-    def filter_models(self, *models):
-        # Fetch associated `ContentType` instances for filtering
-        content_types = tuple(get_content_types(models).values())
-        return self.filter(**{
-            "%s__in" % self.model.CONTENT_TYPE_FIELD: content_types
-        })
+        return qs.select_related(*related)
 
     def exclude_subclasses(self):
-        content_type_field_name = self.model.CONTENT_TYPE_FIELD
-        model_content_type = get_content_type(self.model)
-        return self.filter(**{content_type_field_name: model_content_type})
+        return self.filter(**self.model.content_type_lookup())
 
     def _clone(self, *args, **kwargs):
         kwargs.update(type_cast=getattr(self, 'type_cast', False))
@@ -75,8 +57,8 @@ class PolymorphicManager(models.Manager):
         from .models import BasePolymorphicModel
         if not issubclass(model, BasePolymorphicModel):
             raise ImproperlyConfigured(
-                '`PolymorphicManager` can only be used on '
-                '`BasePolymorphicModel` subclasses.'
+                '`%s` can only be used on '
+                '`BasePolymorphicModel` subclasses.' % self.__class__.__name__
             )
         return super(PolymorphicManager, self).contribute_to_class(model, name)
 
@@ -85,10 +67,8 @@ class PolymorphicManager(models.Manager):
         qs = PolymorphicQuerySet(model, using=self._db)
         opts = model._meta
         if opts.proxy:
-            # Select only associated model and it's subclass
-            qs = qs.filter_models(
-                model, *tuple(opts._subclass_accessors.keys())
-            )
+            # Select only associated model and it's subclasses
+            qs = qs.filter(**self.model.subclasses_lookup())
         return qs
 
     if django.VERSION < (1, 8):

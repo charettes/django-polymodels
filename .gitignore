@@ -3,3 +3,4 @@ syntax:glob
 dist/
 django_polymodels.egg-info/*
 .coverage
+.tox

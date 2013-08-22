@@ -43,21 +43,20 @@ class BasePolymorphicModel(models.Model):
         return super(BasePolymorphicModel, self).save(*args, **kwargs)
 
     @classmethod
-    def content_type_lookup(cls, *models):
+    def content_type_lookup(cls, *models, **kwargs):
+        query_name = kwargs.pop('query_name', None) or cls.CONTENT_TYPE_FIELD
         if models:
-            content_types = tuple(get_content_types(models).values())
-            return {
-                "%s__in" % cls.CONTENT_TYPE_FIELD: content_types
-            }
+            query_name = "%s__in" % query_name
+            value = [ct.pk for ct in get_content_types(models).values()]
         else:
-            return {
-                cls.CONTENT_TYPE_FIELD: get_content_type(cls)
-            }
+            value = get_content_type(cls).pk
+        return {query_name: value}
 
     @classmethod
-    def subclasses_lookup(cls):
+    def subclasses_lookup(cls, query_name=None):
         return cls.content_type_lookup(
-            cls, *tuple(cls._meta._subclass_accessors.keys())
+            cls, *tuple(cls._meta._subclass_accessors.keys()),
+            query_name=query_name
         )
 
 

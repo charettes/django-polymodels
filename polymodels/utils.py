@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import sys
+
 import django
 from django.contrib.contenttypes.models import ContentType
 from django.db.models.base import ModelBase
@@ -121,3 +123,7 @@ else:
         for base in model.__bases__:
             if isinstance(base, ModelBase):
                 return base
+
+
+# TODO: replace uses by django.utils.six.string_types when support for Django 1.4 is dropped
+string_types = str if sys.version_info[0] == 3 else basestring

@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
+
 import sys
 
 from django.db import models
 
+from ..fields import PolymorphicTypeField
 from ..models import PolymorphicModel
 
 
@@ -14,11 +16,11 @@ class Zoo(models.Model):
 
 
 class Animal(PolymorphicModel):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=50)
 
     class Meta:
         app_label = 'polymodels'
-        ordering = ('id',)
+        ordering = ['id']
 
     def __str__(self):
         return self.name
@@ -38,19 +40,33 @@ class Monkey(Mammal):
         app_label = 'polymodels'
 
 
+class Trait(PolymorphicModel):
+    trait_type = PolymorphicTypeField('self', blank=True, null=True)
+    mammal_type = PolymorphicTypeField(Mammal, blank=True, null=True)
+    snake_type = PolymorphicTypeField('Snake')
+
+    class Meta:
+        app_label = 'polymodels'
+
+
+class AcknowledgedTrait(Trait):
+    class Meta:
+        proxy = True
+
+
 class Reptile(Animal):
     length = models.SmallIntegerField()
 
     class Meta:
         app_label = 'polymodels'
         abstract = True
-        ordering = ('id',)
+        ordering = ['id']
 
 
 class Snake(Reptile):
     class Meta:
         app_label = 'polymodels'
-        ordering = ('id',)
+        ordering = ['id']
 
 
 class BigSnake(Snake):

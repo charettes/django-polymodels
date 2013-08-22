@@ -9,7 +9,7 @@ from django.db.models.fields.related import add_lazy_relation, ManyToOneRel
 from django.utils.translation import ugettext_lazy as _
 
 from .models import BasePolymorphicModel
-from .utils import string_types
+from .utils import get_content_type, string_types
 
 
 class ManyToOneRel(ManyToOneRel):
@@ -81,9 +81,7 @@ class PolymorphicTypeField(ForeignKey):
 
     def do_polymorphic_type(self, polymorphic_type):
         if self.default is NOT_PROVIDED and not self.null:
-            self.default = lambda: ContentType.objects.get_for_model(
-                polymorphic_type, for_concrete_model=False
-            )
+            self.default = lambda: get_content_type(polymorphic_type)
         self.type = polymorphic_type.__name__
         self.error_messages['invalid'] = (
             'Specified content type is not of a subclass of %s.' %

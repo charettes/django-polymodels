@@ -24,7 +24,8 @@ class BasePolymorphicModel(models.Model):
 
     def type_cast(self, to=None):
         if to is None:
-            to = getattr(self, self.CONTENT_TYPE_FIELD).model_class()
+            content_type_id = getattr(self, "%s_id" % self.CONTENT_TYPE_FIELD)
+            to = ContentType.objects.get_for_id(content_type_id).model_class()
         attrs, proxy, _lookup = self._meta._subclass_accessors.get(to, EMPTY_ACCESSOR)
         # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
@@ -76,25 +77,25 @@ def prepare_polymorphic_model(sender, **kwargs):
         try:
             content_type_field_name = getattr(sender, 'CONTENT_TYPE_FIELD')
         except AttributeError:
-            raise ImproperlyConfigured('`BasePolymorphicModel` subclasses must '
-                                       'define a `CONTENT_TYPE_FIELD`.')
+            raise ImproperlyConfigured(
+                '`BasePolymorphicModel` subclasses must '
+                'define a `CONTENT_TYPE_FIELD`.'
+            )
         else:
             try:
                 content_type_field = opts.get_field(content_type_field_name)
             except FieldDoesNotExist:
-                raise ImproperlyConfigured('`%s.%s.CONTENT_TYPE_FIELD` '
-                                           'points to an inexistent field "%s".'
-                                           % (sender.__module__,
-                                              sender.__name__,
-                                              content_type_field_name))
+                raise ImproperlyConfigured(
+                    '`%s.%s.CONTENT_TYPE_FIELD` points to an inexistent field "%s".'
+                    % (sender.__module__, sender.__name__, content_type_field_name)
+                )
             else:
                 if (not isinstance(content_type_field, models.ForeignKey) or
                     content_type_field.rel.to is not ContentType):
-                    raise ImproperlyConfigured('`%s.%s.%s` must be a '
-                                               '`ForeignKey` to `ContentType`.'
-                                               % (sender.__module__,
-                                                  sender.__name__,
-                                                  content_type_field_name))
+                    raise ImproperlyConfigured(
+                        '`%s.%s.%s` must be a `ForeignKey` to `ContentType`.'
+                        % (sender.__module__, sender.__name__, content_type_field_name)
+                    )
         setattr(opts, '_subclass_accessors', {})
         parents = [sender]
         proxy = sender if opts.proxy else None

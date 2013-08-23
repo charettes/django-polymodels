@@ -11,7 +11,7 @@ from .utils import get_queryset
 class PolymorphicQuerySet(models.query.QuerySet):
     def select_subclasses(self, *models):
         self.type_cast = True
-        relateds = set([self.model.CONTENT_TYPE_FIELD])
+        relateds = set()
         opts = self.model._meta
         accessors = opts._subclass_accessors
         if models:

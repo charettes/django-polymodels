@@ -23,8 +23,7 @@ class PolymorphicQuerySetTest(TestCase):
         animals_expected_num_queries = 1
         animals_expected_query_select_related = {
             'mammal': {'monkey': {}},
-            'snake': {},
-            'content_type': {}
+            'snake': {}
         }
         # We can't do `select_related` on multiple one-to-one
         # relationships on django < 1.6, thus it generates extra queries
@@ -44,8 +43,7 @@ class PolymorphicQuerySetTest(TestCase):
         animal_mammals = Animal.objects.select_subclasses(Mammal)
         animal_mammals_expected_num_queries = 1
         animal_mammals_expected_query_select_related = {
-            'mammal': {'monkey': {}},
-            'content_type': {}
+            'mammal': {'monkey': {}}
         }
         # We can't do `select_related` on multiple one-to-one
         # relationships on django < 1.6, thus it generates extra queries
@@ -62,10 +60,7 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<Monkey: monkey>'])
         # Filter out non-snake (subclass through an abstract one)
         animal_snakes = Animal.objects.select_subclasses(Snake)
-        self.assertEqual(animal_snakes.query.select_related, {
-            'snake': {},
-            'content_type': {}
-        })
+        self.assertEqual(animal_snakes.query.select_related, {'snake': {}})
         with self.assertNumQueries(1):
             self.assertQuerysetEqual(animal_snakes.all(),
                                      ['<Snake: snake>',
@@ -73,9 +68,7 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<HugeSnake: huge snake>'])
         # Subclass with only proxies
         snakes = Snake.objects.select_subclasses()
-        self.assertEqual(snakes.query.select_related, {
-            'content_type': {}
-        })
+        self.assertFalse(isinstance(snakes.query.select_related, dict))
         with self.assertNumQueries(1):
             self.assertQuerysetEqual(snakes.all(),
                                      ['<Snake: snake>',
@@ -83,9 +76,7 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<HugeSnake: huge snake>'])
         # Subclass filter proxies
         snake_bigsnakes = Snake.objects.select_subclasses(BigSnake)
-        self.assertEqual(snake_bigsnakes.query.select_related, {
-            'content_type': {}
-        })
+        self.assertFalse(isinstance(snakes.query.select_related, dict))
         with self.assertNumQueries(1):
             self.assertQuerysetEqual(snake_bigsnakes.all(),
                                      ['<BigSnake: big snake>',

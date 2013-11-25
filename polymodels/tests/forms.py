@@ -7,6 +7,7 @@ from .models import Animal, BigSnake, Snake
 
 class AnimalForm(PolymorphicModelForm):
     class Meta:
+        fields = ['name']
         model = Animal
 
 

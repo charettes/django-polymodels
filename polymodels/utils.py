@@ -4,7 +4,6 @@ import sys
 
 import django
 from django.contrib.contenttypes.models import ContentType
-from django.db.models.base import ModelBase
 try:
     from django.utils.encoding import smart_text
 except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
@@ -25,32 +24,11 @@ if django.VERSION >= (1, 5):
         manager = ContentType.objects.db_manager(db)
         return manager.get_for_models(*models, for_concrete_models=False)
 else:
-    def _get_for_concrete_model(manager, model):
-        return manager.get_for_model(model)
-
-    if django.VERSION >= (1, 4):
-        # django 1.4 introduced `get_for_models` and `_get_from_cache`
-        def _get_from_cache(manager, opts):
-            return manager._get_from_cache(opts)
-
-        def _get_for_concrete_models(manager, models):
-            return manager.get_for_models(*models)
-    else:  # TODO: Remove when support for Django 1.3 is dropped
-        def _get_from_cache(manager, opts):
-            key = (opts.app_label, opts.object_name.lower())
-            return manager.__class__._cache[manager.db][key]
-
-        def _get_for_concrete_models(manager, models):
-            content_types = {}
-            for model in models:
-                content_types[model] = _get_for_concrete_model(manager, model)
-            return content_types
-
     def _get_for_proxy_model(manager, opts, model):
         if model._deferred:
             opts = opts.proxy_for_model._meta
         try:
-            return _get_from_cache(manager, opts)
+            return manager._get_from_cache(opts)
         except KeyError:
             ct, _created = manager.get_or_create(
                 app_label=opts.app_label,
@@ -66,7 +44,7 @@ else:
         if opts.proxy:
             return _get_for_proxy_model(manager, opts, model)
         else:
-            return _get_for_concrete_model(manager, model)
+            return manager.get_for_model(model)
 
     def get_content_types(models, db=None):
         manager = ContentType.objects.db_manager(db)
@@ -79,7 +57,7 @@ else:
                 content_types[model] = content_type
             else:
                 concrete_models.append(model)
-        content_types.update(_get_for_concrete_models(manager, concrete_models))
+        content_types.update(manager.get_for_models(*concrete_models))
         return content_types
 
 
@@ -109,20 +87,6 @@ if django.VERSION >= (1, 6):
 else:
     def model_name(opts):
         return opts.module_name
-
-
-# TODO: Remove when support for Django 1.3 is dropped
-if django.VERSION >= (1, 4):
-    def proxy_for_model(model):
-        opts = model._meta
-        assert opts.proxy
-        return opts.proxy_for_model
-else:
-    def proxy_for_model(model):
-        assert model._meta.proxy
-        for base in model.__bases__:
-            if isinstance(base, ModelBase):
-                return base
 
 
 # TODO: replace uses by django.utils.six.string_types when support for Django 1.4 is dropped

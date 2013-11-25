@@ -11,8 +11,7 @@ except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
 from django.db.models.fields import FieldDoesNotExist
 
 from .managers import PolymorphicManager
-from .utils import (copy_fields, get_content_type, get_content_types,
-    model_name, proxy_for_model)
+from .utils import copy_fields, get_content_type, get_content_types, model_name
 
 
 EMPTY_ACCESSOR = ([], None, '')
@@ -114,7 +113,7 @@ def prepare_polymorphic_model(sender, **kwargs):
                     lookup = LOOKUP_SEP.join(attrs)
                 parent_opts._subclass_accessors[sender] = (tuple(attrs), proxy, lookup)
                 if parent_opts.proxy:
-                    parents.insert(0, proxy_for_model(parent))
+                    parents.insert(0, parent_opts.proxy_for_model)
                 else:
                     attrs.insert(0, model_name(parent_opts))
                     parents = list(parent._meta.parents.keys()) + parents

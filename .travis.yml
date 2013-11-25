@@ -32,7 +32,7 @@ install:
   - pip install $DJANGO coveralls -q --use-mirrors
 
 script:
-  - python -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=test_settings -v2
+  - python -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=polymodels.tests.settings -v2
 
 after_success:
   - coverage report -m

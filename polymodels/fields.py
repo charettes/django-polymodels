@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from inspect import isclass
 
+from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
@@ -9,10 +10,10 @@ from django.db.models.fields.related import add_lazy_relation, ManyToOneRel
 from django.utils.translation import ugettext_lazy as _
 
 from .models import BasePolymorphicModel
-from .utils import get_content_type, string_types
+from .utils import get_content_type, LazyObject, string_types
 
 
-class ManyToOneRel(ManyToOneRel):
+class PolymorphicManyToOneRel(ManyToOneRel):
     """
     Relationship that generates a `limit_choices_to` based on it's polymorphic
     type subclasses.
@@ -39,6 +40,19 @@ class ManyToOneRel(ManyToOneRel):
         return self.__dict__.pop('limit_choices_to', None)
 
 
+class LazyPolymorphicTypeQueryset(LazyObject):
+    def __init__(self, rel, db):
+        super(LazyPolymorphicTypeQueryset, self).__init__()
+        self.__dict__.update(rel=rel, db=db)
+
+    def _setup(self):
+        rel = self.__dict__.get('rel')
+        db = self.__dict__.get('db')
+        self._wrapped = rel.to._default_manager.using(db).complex_filter(
+            rel.limit_choices_to
+        )
+
+
 class PolymorphicTypeField(ForeignKey):
     default_error_messages = {
         'invalid': _('Specified model is not a subclass of %(model)s.')
@@ -51,7 +65,9 @@ class PolymorphicTypeField(ForeignKey):
         if not isinstance(polymorphic_type, string_types):
             self.validate_polymorphic_type(polymorphic_type)
         defaults = {
-            'to': ContentType, 'related_name': '+', 'rel_class': ManyToOneRel
+            'to': ContentType,
+            'related_name': '+',
+            'rel_class': PolymorphicManyToOneRel
         }
         defaults.update(kwargs)
         super(PolymorphicTypeField, self).__init__(*args, **defaults)
@@ -87,3 +103,17 @@ class PolymorphicTypeField(ForeignKey):
             'Specified content type is not of a subclass of %s.' %
             polymorphic_type._meta.object_name
         )
+
+    def formfield(self, **kwargs):
+        db = kwargs.pop('using', None)
+        if isinstance(self.rel.to, string_types):
+            raise ValueError("Cannot create form field for %r yet, because "
+                             "its related model %r has not been loaded yet" %
+                             (self.name, self.rel.to))
+        defaults = {
+            'form_class': forms.ModelChoiceField,
+            'queryset': LazyPolymorphicTypeQueryset(self.rel, db),
+            'to_field_name': self.rel.field_name,
+        }
+        defaults.update(kwargs)
+        return super(ForeignKey, self).formfield(**defaults)

@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+import operator
+
 import sys
 
 import django
@@ -8,6 +10,7 @@ try:
     from django.utils.encoding import smart_text
 except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
     from django.utils.encoding import smart_unicode as smart_text
+from django.utils.functional import LazyObject, new_method_proxy
 
 
 # Prior to #18399 being fixed there was no way to retrieve `ContentType`
@@ -103,3 +106,14 @@ def with_metaclass(meta, *bases):
                 return type.__new__(cls, name, (), d)
             return meta(name, bases, d)
     return metaclass(str('temporary_class'), None, {})
+
+# TODO: Remove when support for 1.5 is dropped
+if django.VERSION < (1, 6):
+    class LazyObject(LazyObject):
+        # Dictionary methods support
+        __getitem__ = new_method_proxy(operator.getitem)
+        __setitem__ = new_method_proxy(operator.setitem)
+        __delitem__ = new_method_proxy(operator.delitem)
+
+        __len__ = new_method_proxy(len)
+        __contains__ = new_method_proxy(operator.contains)

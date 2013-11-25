@@ -11,7 +11,7 @@ from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
 
 
-class PolymorphicTypeFieldTest(TestCase):
+class PolymorphicTypeFieldTests(TestCase):
     def test_default_value(self):
         """
         Make sure fields defaults
@@ -73,7 +73,6 @@ class PolymorphicTypeFieldTest(TestCase):
     def test_valid_proxy_subclass(self):
         trait = Trait.objects.create()
         trait.trait_type = get_content_type(AcknowledgedTrait)
-        trait_type = Trait._meta.get_field('trait_type')
         trait.full_clean()
 
     def test_description(self):
@@ -92,3 +91,17 @@ class PolymorphicTypeFieldTest(TestCase):
             "First parameter to `PolymorphicTypeField` must be "
             "a subclass of `BasePolymorphicModel`"):
             PolymorphicTypeField(models.Model)
+
+    def test_formfield_issues_no_queries(self):
+        trait_type = Trait._meta.get_field('trait_type')
+        with self.assertNumQueries(0):
+            formfield = trait_type.formfield()
+        self.assertSetEqual(set(formfield.queryset), set([
+            get_content_type(Trait),
+            get_content_type(AcknowledgedTrait)
+        ]))
+
+    def test_unresolved_relationship_formfield(self):
+        field = PolymorphicTypeField('Snake', to='app.Unresolved')
+        with self.assertRaises(ValueError):
+            field.formfield()

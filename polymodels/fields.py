@@ -117,3 +117,9 @@ class PolymorphicTypeField(ForeignKey):
         }
         defaults.update(kwargs)
         return super(ForeignKey, self).formfield(**defaults)
+
+    def south_field_triple(self):
+        """Provide a suitable description of this field for South."""
+        from south.modelsinspector import introspector
+        args, kwargs = introspector(self)
+        return 'django.db.models.fields.related.ForeignKey', args, kwargs

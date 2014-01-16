@@ -1,5 +1,12 @@
 from __future__ import unicode_literals
 
+import sys
+# TODO: Remove when support for Python 2.6 is dropped
+if sys.version_info >= (2, 7):
+    from unittest import skipUnless
+else:
+    from django.utils.unittest import skipUnless
+
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.query_utils import Q
@@ -9,6 +16,14 @@ from ..utils import get_content_type
 
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
+
+
+try:
+    import south
+except ImportError:
+    SOUTH_INSTALLED = False
+else:
+    SOUTH_INSTALLED = True
 
 
 class PolymorphicTypeFieldTests(TestCase):
@@ -105,3 +120,21 @@ class PolymorphicTypeFieldTests(TestCase):
         field = PolymorphicTypeField('Snake', to='app.Unresolved')
         with self.assertRaises(ValueError):
             field.formfield()
+
+    @skipUnless(SOUTH_INSTALLED, 'South is not installed.')
+    def test_south_field_triple(self):
+        field = PolymorphicTypeField('Snake')
+        self.assertEqual(field.south_field_triple(), (
+            'django.db.models.fields.related.ForeignKey', [], {
+                'related_name': repr('+'),
+                'to': "orm['contenttypes.ContentType']"
+            }
+        ))
+        field = PolymorphicTypeField('Snake', null=True)
+        self.assertEqual(field.south_field_triple(), (
+            'django.db.models.fields.related.ForeignKey', [], {
+                'related_name': repr('+'),
+                'to': "orm['contenttypes.ContentType']",
+                'null': repr(True)
+            }
+        ))

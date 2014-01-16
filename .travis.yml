@@ -24,7 +24,7 @@ matrix:
     - env: DJANGO="https://github.com/django/django/archive/master.tar.gz"
 
 install:
-  - pip install $DJANGO coveralls -q --use-mirrors
+  - pip install $DJANGO coveralls south -q --use-mirrors
 
 script:
   - python -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=polymodels.tests.settings -v2

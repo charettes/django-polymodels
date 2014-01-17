@@ -13,9 +13,11 @@ class AnimalForm(PolymorphicModelForm):
 
 class SnakeForm(AnimalForm):
     class Meta:
+        fields = ['name']
         model = Snake
 
 
 class BigSnakeForm(SnakeForm):
     class Meta:
+        fields = ['name']
         model = BigSnake

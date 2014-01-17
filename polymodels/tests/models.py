@@ -51,6 +51,7 @@ class Trait(PolymorphicModel):
 
 class AcknowledgedTrait(Trait):
     class Meta:
+        app_label = 'polymodels'
         proxy = True
 
 

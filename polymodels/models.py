@@ -47,7 +47,7 @@ class BasePolymorphicModel(models.Model):
         query_name = kwargs.pop('query_name', None) or cls.CONTENT_TYPE_FIELD
         if models:
             query_name = "%s__in" % query_name
-            value = [ct.pk for ct in get_content_types(models).values()]
+            value = set(ct.pk for ct in get_content_types(models).values())
         else:
             value = get_content_type(cls).pk
         return {query_name: value}

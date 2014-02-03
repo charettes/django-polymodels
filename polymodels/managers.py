@@ -28,7 +28,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
                 related = accessors[subclass][2]
                 if related:
                     relateds.add(related)
-            qs = self.filter(
+            queryset = self.filter(
                 **self.model.content_type_lookup(*tuple(subclasses))
             )
         else:
@@ -38,8 +38,10 @@ class PolymorphicQuerySet(models.query.QuerySet):
                 related = accessor[2]
                 if accessor[2]:
                     relateds.add(related)
-            qs = self
-        return qs.select_related(*relateds)
+            queryset = self
+        if relateds:
+            queryset = queryset.select_related(*relateds)
+        return queryset
 
     def exclude_subclasses(self):
         return self.filter(**self.model.content_type_lookup())

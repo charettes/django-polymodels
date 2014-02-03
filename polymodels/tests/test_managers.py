@@ -68,7 +68,7 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<HugeSnake: huge snake>'])
         # Subclass with only proxies
         snakes = Snake.objects.select_subclasses()
-        self.assertFalse(isinstance(snakes.query.select_related, dict))
+        self.assertFalse(snakes.query.select_related)
         with self.assertNumQueries(1):
             self.assertQuerysetEqual(snakes.all(),
                                      ['<Snake: snake>',
@@ -76,7 +76,7 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<HugeSnake: huge snake>'])
         # Subclass filter proxies
         snake_bigsnakes = Snake.objects.select_subclasses(BigSnake)
-        self.assertFalse(isinstance(snakes.query.select_related, dict))
+        self.assertFalse(snakes.query.select_related)
         with self.assertNumQueries(1):
             self.assertQuerysetEqual(snake_bigsnakes.all(),
                                      ['<BigSnake: big snake>',

@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 from inspect import isclass
 
+import django
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import ForeignKey, Q
@@ -123,3 +124,9 @@ class PolymorphicTypeField(ForeignKey):
         from south.modelsinspector import introspector
         args, kwargs = introspector(self)
         return 'django.db.models.fields.related.ForeignKey', args, kwargs
+
+    if django.VERSION >= (1, 7):
+        def deconstruct(self):
+            name, _, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
+            path = 'django.db.models.fields.related.ForeignKey'
+            return name, path, args, kwargs

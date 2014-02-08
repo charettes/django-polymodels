@@ -7,6 +7,7 @@ if sys.version_info >= (2, 7):
 else:
     from django.utils.unittest import skipUnless
 
+import django
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.query_utils import Q
@@ -136,5 +137,24 @@ class PolymorphicTypeFieldTests(TestCase):
                 'related_name': repr('+'),
                 'to': "orm['contenttypes.ContentType']",
                 'null': repr(True)
+            }
+        ))
+
+    @skipUnless(django.VERSION >= (1, 7),
+                'Field deconstruction in only supported on Django 1.7+')
+    def test_field_deconstruction(self):
+        field = PolymorphicTypeField('Snake')
+        self.assertEqual(field.deconstruct(), (
+            None, 'django.db.models.fields.related.ForeignKey', [], {
+                'to_field': 'id',
+                'to': 'contenttypes.ContentType'
+            }
+        ))
+        field = PolymorphicTypeField('Snake', null=True)
+        self.assertEqual(field.deconstruct(), (
+            None, 'django.db.models.fields.related.ForeignKey', [], {
+                'to_field': 'id',
+                'to': 'contenttypes.ContentType',
+                'null': True
             }
         ))

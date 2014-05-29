@@ -19,6 +19,7 @@ EMPTY_ACCESSOR = ([], None, '')
 
 class BasePolymorphicModel(models.Model):
     class Meta:
+        app_label = 'polymodels'
         abstract = True
 
     def type_cast(self, to=None):
@@ -67,6 +68,7 @@ class PolymorphicModel(BasePolymorphicModel):
     objects = PolymorphicManager()
 
     class Meta:
+        app_label = 'polymodels'
         abstract = True
 
 

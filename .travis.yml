@@ -17,11 +17,11 @@ env:
 matrix:
   exclude:
     - python: 3.2
-      env: REQUIREMENTS="django>=1.4,<1.5"
+      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
     - python: 3.3
-      env: REQUIREMENTS="django>=1.4,<1.5"
+      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
     - python: 3.4
-      env: REQUIREMENTS="django>=1.4,<1.5"
+      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
     - python: 2.6
       env: REQUIREMENTS="https://github.com/django/django/archive/stable/1.7.x.tar.gz"
     - python: 2.6

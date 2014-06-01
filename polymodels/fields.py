@@ -7,7 +7,9 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
-from django.db.models.fields.related import add_lazy_relation, ManyToOneRel
+from django.db.models.fields.related import (
+    add_lazy_relation, RelatedField, ManyToOneRel
+)
 from django.utils.translation import ugettext_lazy as _
 
 from .models import BasePolymorphicModel
@@ -117,7 +119,7 @@ class PolymorphicTypeField(ForeignKey):
             'to_field_name': self.rel.field_name,
         }
         defaults.update(kwargs)
-        return super(ForeignKey, self).formfield(**defaults)
+        return super(RelatedField, self).formfield(**defaults)
 
     def south_field_triple(self):
         """Provide a suitable description of this field for South."""

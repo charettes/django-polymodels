@@ -17,5 +17,4 @@ INSTALLED_APPS = [
 ]
 
 if not TEST_RUNNER.endswith('DiscoverRunner'):
-    # Use a byte string to prevent 1.4.x from raising at import time.
-    TEST_RUNNER = b'discover_runner.DiscoverRunner'
+    TEST_RUNNER = str('discover_runner.DiscoverRunner')

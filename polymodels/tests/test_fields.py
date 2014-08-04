@@ -144,14 +144,12 @@ class PolymorphicTypeFieldTests(TestCase):
         field = PolymorphicTypeField('Snake')
         self.assertEqual(field.deconstruct(), (
             None, 'django.db.models.fields.related.ForeignKey', [], {
-                'to_field': 'id',
                 'to': 'contenttypes.ContentType'
             }
         ))
         field = PolymorphicTypeField('Snake', null=True)
         self.assertEqual(field.deconstruct(), (
             None, 'django.db.models.fields.related.ForeignKey', [], {
-                'to_field': 'id',
                 'to': 'contenttypes.ContentType',
                 'null': True
             }

@@ -8,20 +8,20 @@ python:
   - 3.4
 
 env:
-  - REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
-  - REQUIREMENTS="django>=1.5,<1.6 django-discover-runner"
-  - REQUIREMENTS="django>=1.6,<1.7"
+  - REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
+  - REQUIREMENTS="django>=1.5,<1.6 django-discover-runner south"
+  - REQUIREMENTS="django>=1.6,<1.7 south"
   - REQUIREMENTS="https://github.com/django/django/archive/stable/1.7.x.tar.gz"
   - REQUIREMENTS="https://github.com/django/django/archive/master.tar.gz"
 
 matrix:
   exclude:
     - python: 3.2
-      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
+      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
     - python: 3.3
-      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
+      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
     - python: 3.4
-      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner"
+      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
     - python: 2.6
       env: REQUIREMENTS="https://github.com/django/django/archive/stable/1.7.x.tar.gz"
     - python: 2.6
@@ -31,7 +31,7 @@ matrix:
     - env: REQUIREMENTS="https://github.com/django/django/archive/master.tar.gz"
 
 install:
-  - pip install $REQUIREMENTS coveralls south -q
+  - pip install $REQUIREMENTS coveralls -q
 
 script:
   - python -R -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=polymodels.tests.settings -v2

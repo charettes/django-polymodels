@@ -92,7 +92,7 @@ def prepare_polymorphic_model(sender, **kwargs):
                 )
             else:
                 if (not isinstance(content_type_field, models.ForeignKey) or
-                    content_type_field.rel.to is not ContentType):
+                        content_type_field.rel.to is not ContentType):
                     raise ImproperlyConfigured(
                         '`%s.%s.%s` must be a `ForeignKey` to `ContentType`.'
                         % (sender.__module__, sender.__name__, content_type_field_name)

@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from functools import partial
 from inspect import isclass
 
 import django
@@ -87,7 +88,7 @@ class PolymorphicTypeField(ForeignKey):
         super(PolymorphicTypeField, self).contribute_to_class(cls, name)
         polymorphic_type = self.rel.polymorphic_type
         if (isinstance(polymorphic_type, string_types) or
-            polymorphic_type._meta.pk is None):
+                polymorphic_type._meta.pk is None):
             def resolve_polymorphic_type(field, model, cls):
                 field.validate_polymorphic_type(model)
                 field.rel.polymorphic_type = model
@@ -100,7 +101,7 @@ class PolymorphicTypeField(ForeignKey):
 
     def do_polymorphic_type(self, polymorphic_type):
         if self.default is NOT_PROVIDED and not self.null:
-            self.default = lambda: get_content_type(polymorphic_type)
+            self.default = partial(get_content_type, polymorphic_type)
         self.type = polymorphic_type.__name__
         self.error_messages['invalid'] = (
             'Specified content type is not of a subclass of %s.' %

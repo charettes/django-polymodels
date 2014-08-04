@@ -22,9 +22,7 @@ from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
 try:
     import south
 except ImportError:
-    SOUTH_INSTALLED = False
-else:
-    SOUTH_INSTALLED = True
+    south = None
 
 
 class PolymorphicTypeFieldTests(TestCase):
@@ -122,7 +120,7 @@ class PolymorphicTypeFieldTests(TestCase):
         with self.assertRaises(ValueError):
             field.formfield()
 
-    @skipUnless(SOUTH_INSTALLED, 'South is not installed.')
+    @skipUnless(south, 'South is not installed.')
     def test_south_field_triple(self):
         field = PolymorphicTypeField('Snake')
         self.assertEqual(field.south_field_triple(), (
@@ -141,7 +139,7 @@ class PolymorphicTypeFieldTests(TestCase):
         ))
 
     @skipUnless(django.VERSION >= (1, 7),
-                'Field deconstruction in only supported on Django 1.7+')
+                'Field deconstruction is only supported on Django 1.7+')
     def test_field_deconstruction(self):
         field = PolymorphicTypeField('Snake')
         self.assertEqual(field.deconstruct(), (

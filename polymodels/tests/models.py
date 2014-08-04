@@ -27,7 +27,9 @@ class Animal(PolymorphicModel):
 
     if not sys.version_info[0] == 3:
         __unicode__ = __str__
-        __str__ = lambda self: self.__unicode__().encode('utf-8')
+
+        def __str__(self):
+            return self.__unicode__().encode('utf-8')
 
 
 class Mammal(Animal):

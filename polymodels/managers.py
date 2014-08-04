@@ -90,7 +90,7 @@ class PolymorphicManager(models.Manager):
                     "`PolymorphicManager.get_query_set` is deprecated, use "
                     "`get_queryset` instead",
                     DeprecationWarning if django.VERSION >= (1, 7)
-                        else PendingDeprecationWarning,
+                    else PendingDeprecationWarning,
                     stacklevel=2
                 )
                 return PolymorphicManager.get_queryset(self)

@@ -18,3 +18,5 @@ INSTALLED_APPS = [
 
 if not TEST_RUNNER.endswith('DiscoverRunner'):
     TEST_RUNNER = str('discover_runner.DiscoverRunner')
+
+SILENCED_SYSTEM_CHECKS = ['1_7.W001']

@@ -26,3 +26,6 @@ class PolymorphicModelFormTests(TestCase):
         self.assertIsInstance(form.instance, Snake)
         form = BigSnakeForm()
         self.assertIsInstance(form.instance, BigSnake)
+
+    def test_retreival_from_class(self):
+        self.assertEqual(AnimalForm[Snake], SnakeForm)

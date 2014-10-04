@@ -19,14 +19,16 @@ class PolymorphicModelFormMetaclass(models.ModelFormMetaclass):
                         mro._meta.polymorphic_forms[model] = form
         return form
 
+    def __getitem__(self, model):
+        try:
+            return self._meta.polymorphic_forms[model]
+        except KeyError:
+            raise TypeError("No form registered for %s." % model)
+
 
 class PolymorphicModelForm(with_metaclass(PolymorphicModelFormMetaclass, models.ModelForm)):
     def __new__(cls, *args, **kwargs):
         instance = kwargs.get('instance', None)
         if instance:
-            model = instance.__class__
-            try:
-                cls = cls._meta.polymorphic_forms[model]
-            except KeyError:
-                raise TypeError("No form registered for %s." % model)
+            cls = cls[instance.__class__]
         return super(PolymorphicModelForm, cls).__new__(cls)

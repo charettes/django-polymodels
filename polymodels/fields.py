@@ -11,10 +11,10 @@ from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.related import RelatedField, ManyToOneRel
 from django.utils.translation import ugettext_lazy as _
 
-from .models import BasePolymorphicModel
-from .utils import (
+from .compat import (
     get_content_type, get_remote_field, get_remote_model, lazy_related_operation, LazyObject, string_types
 )
+from .models import BasePolymorphicModel
 
 
 class PolymorphicManyToOneRel(ManyToOneRel):

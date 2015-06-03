@@ -4,14 +4,11 @@ import django
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
-try:
-    from django.db.models.constants import LOOKUP_SEP
-except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
-    from django.db.models.sql.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 
+from .compat import get_content_type, get_content_types, get_remote_field, get_remote_model, model_name, LOOKUP_SEP
 from .managers import PolymorphicManager
-from .utils import copy_fields, get_content_type, get_content_types, get_remote_field, get_remote_model, model_name
+from .utils import copy_fields
 
 
 EMPTY_ACCESSOR = ([], None, '')

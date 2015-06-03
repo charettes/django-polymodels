@@ -5,7 +5,7 @@ import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
-from .utils import get_queryset
+from .compat import get_queryset
 
 
 class PolymorphicQuerySet(models.query.QuerySet):

@@ -1,19 +1,12 @@
 from __future__ import unicode_literals
 
-import sys
-# TODO: Remove when support for Python 2.6 is dropped
-if sys.version_info >= (2, 7):
-    from unittest import skipUnless
-else:
-    from django.utils.unittest import skipUnless
-
 import django
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.query_utils import Q
 
+from ..compat import get_content_type, get_remote_field, skipUnless
 from ..fields import PolymorphicTypeField
-from ..utils import get_content_type, get_remote_field
 
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait

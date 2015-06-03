@@ -8,13 +8,13 @@ from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
-from django.db.models.fields.related import (
-    add_lazy_relation, RelatedField, ManyToOneRel
-)
+from django.db.models.fields.related import RelatedField, ManyToOneRel
 from django.utils.translation import ugettext_lazy as _
 
 from .models import BasePolymorphicModel
-from .utils import get_content_type, LazyObject, string_types
+from .utils import (
+    get_content_type, get_remote_field, get_remote_model, lazy_related_operation, LazyObject, string_types
+)
 
 
 class PolymorphicManyToOneRel(ManyToOneRel):
@@ -45,15 +45,15 @@ class PolymorphicManyToOneRel(ManyToOneRel):
 
 
 class LazyPolymorphicTypeQueryset(LazyObject):
-    def __init__(self, rel, db):
+    def __init__(self, remote_field, db):
         super(LazyPolymorphicTypeQueryset, self).__init__()
-        self.__dict__.update(rel=rel, db=db)
+        self.__dict__.update(remote_field=remote_field, db=db)
 
     def _setup(self):
-        rel = self.__dict__.get('rel')
+        remote_field = self.__dict__.get('remote_field')
         db = self.__dict__.get('db')
-        self._wrapped = rel.to._default_manager.using(db).complex_filter(
-            rel.limit_choices_to
+        self._wrapped = get_remote_model(remote_field)._default_manager.using(db).complex_filter(
+            remote_field.limit_choices_to
         )
 
 
@@ -78,7 +78,7 @@ class PolymorphicTypeField(ForeignKey):
             defaults['rel_class'] = PolymorphicManyToOneRel
         defaults.update(kwargs)
         super(PolymorphicTypeField, self).__init__(*args, **defaults)
-        self.rel.polymorphic_type = polymorphic_type
+        get_remote_field(self).polymorphic_type = polymorphic_type
 
     def validate_polymorphic_type(self, model):
         if not isclass(model) or not issubclass(model, BasePolymorphicModel):
@@ -89,16 +89,14 @@ class PolymorphicTypeField(ForeignKey):
 
     def contribute_to_class(self, cls, name):
         super(PolymorphicTypeField, self).contribute_to_class(cls, name)
-        polymorphic_type = self.rel.polymorphic_type
+        polymorphic_type = get_remote_field(self).polymorphic_type
         if (isinstance(polymorphic_type, string_types) or
                 polymorphic_type._meta.pk is None):
-            def resolve_polymorphic_type(field, model, cls):
-                field.validate_polymorphic_type(model)
-                field.rel.polymorphic_type = model
-                field.do_polymorphic_type(model)
-            add_lazy_relation(
-                cls, self, polymorphic_type, resolve_polymorphic_type
-            )
+            def resolve_polymorphic_type(model, related_model, field):
+                field.validate_polymorphic_type(related_model)
+                get_remote_field(field).polymorphic_type = related_model
+                field.do_polymorphic_type(related_model)
+            lazy_related_operation(resolve_polymorphic_type, cls, polymorphic_type, field=self)
         else:
             self.do_polymorphic_type(polymorphic_type)
 
@@ -113,14 +111,15 @@ class PolymorphicTypeField(ForeignKey):
 
     def formfield(self, **kwargs):
         db = kwargs.pop('using', None)
-        if isinstance(self.rel.to, string_types):
+        remote_model = get_remote_model(get_remote_field(self))
+        if isinstance(remote_model, string_types):
             raise ValueError("Cannot create form field for %r yet, because "
                              "its related model %r has not been loaded yet" %
-                             (self.name, self.rel.to))
+                             (self.name, remote_model))
         defaults = {
             'form_class': forms.ModelChoiceField,
-            'queryset': LazyPolymorphicTypeQueryset(self.rel, db),
-            'to_field_name': self.rel.field_name,
+            'queryset': LazyPolymorphicTypeQueryset(get_remote_field(self), db),
+            'to_field_name': get_remote_field(self).field_name,
         }
         defaults.update(kwargs)
         return super(RelatedField, self).formfield(**defaults)

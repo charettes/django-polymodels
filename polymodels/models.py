@@ -11,7 +11,7 @@ except ImportError:  # TODO: Remove when support for Django 1.4 is dropped
 from django.db.models.fields import FieldDoesNotExist
 
 from .managers import PolymorphicManager
-from .utils import copy_fields, get_content_type, get_content_types, model_name
+from .utils import copy_fields, get_content_type, get_content_types, get_remote_field, get_remote_model, model_name
 
 
 EMPTY_ACCESSOR = ([], None, '')
@@ -92,7 +92,7 @@ def prepare_polymorphic_model(sender, **kwargs):
                 )
             else:
                 if (not isinstance(content_type_field, models.ForeignKey) or
-                        content_type_field.rel.to is not ContentType):
+                        get_remote_model(get_remote_field(content_type_field)) is not ContentType):
                     raise ImproperlyConfigured(
                         '`%s.%s.%s` must be a `ForeignKey` to `ContentType`.'
                         % (sender.__module__, sender.__name__, content_type_field_name)

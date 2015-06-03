@@ -13,7 +13,7 @@ from django.db import models
 from django.db.models.query_utils import Q
 
 from ..fields import PolymorphicTypeField
-from ..utils import get_content_type
+from ..utils import get_content_type, get_remote_field
 
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
@@ -42,33 +42,33 @@ class PolymorphicTypeFieldTests(TestCase):
         trait_type = Trait._meta.get_field('trait_type')
 
         # Make sure it's cached
-        limit_choices_to = trait_type.rel.limit_choices_to
-        self.assertIn('limit_choices_to', trait_type.rel.__dict__)
+        limit_choices_to = get_remote_field(trait_type).limit_choices_to
+        self.assertIn('limit_choices_to', get_remote_field(trait_type).__dict__)
 
         extra_limit_choices_to = {'app_label': 'polymodels'}
 
         # Make sure it works with existing dict `limit_choices_to`
-        trait_type.rel.limit_choices_to = extra_limit_choices_to
+        get_remote_field(trait_type).limit_choices_to = extra_limit_choices_to
         # Cache should be cleared
-        self.assertNotIn('limit_choices_to', trait_type.rel.__dict__)
+        self.assertNotIn('limit_choices_to', get_remote_field(trait_type).__dict__)
         self.assertEqual(
-            trait_type.rel.limit_choices_to,
+            get_remote_field(trait_type).limit_choices_to,
             dict(extra_limit_choices_to, **limit_choices_to)
         )
 
         # Make sure it works with existing Q `limit_choices_to`
-        trait_type.rel.limit_choices_to = Q(**extra_limit_choices_to)
+        get_remote_field(trait_type).limit_choices_to = Q(**extra_limit_choices_to)
         # Cache should be cleared
-        self.assertNotIn('limit_choices_to', trait_type.rel.__dict__)
+        self.assertNotIn('limit_choices_to', get_remote_field(trait_type).__dict__)
         self.assertEqual(
-            str(trait_type.rel.limit_choices_to),
+            str(get_remote_field(trait_type).limit_choices_to),
             str(Q(**extra_limit_choices_to) & Q(**limit_choices_to))
         )
 
         # Re-assign the original value
-        trait_type.rel.limit_choices_to = None
+        get_remote_field(trait_type).limit_choices_to = None
         # Cache should be cleared
-        self.assertNotIn('limit_choices_to', trait_type.rel.__dict__)
+        self.assertNotIn('limit_choices_to', get_remote_field(trait_type).__dict__)
 
     def test_invalid_type(self):
         trait = Trait.objects.create()

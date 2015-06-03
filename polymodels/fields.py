@@ -64,6 +64,7 @@ class PolymorphicTypeField(ForeignKey):
     description = _(
         'Content type of a subclass of %(type)s'
     )
+    rel_class = PolymorphicManyToOneRel
 
     def __init__(self, polymorphic_type, *args, **kwargs):
         if not isinstance(polymorphic_type, string_types):
@@ -71,8 +72,10 @@ class PolymorphicTypeField(ForeignKey):
         defaults = {
             'to': ContentType,
             'related_name': '+',
-            'rel_class': PolymorphicManyToOneRel
         }
+        # TODO: Remove when support for Django 1.8 is dropped.
+        if not hasattr(ForeignKey, 'rel_class'):
+            defaults['rel_class'] = PolymorphicManyToOneRel
         defaults.update(kwargs)
         super(PolymorphicTypeField, self).__init__(*args, **defaults)
         self.rel.polymorphic_type = polymorphic_type

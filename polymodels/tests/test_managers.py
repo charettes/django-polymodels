@@ -98,9 +98,9 @@ class PolymorphicQuerySetTest(TestCase):
 
 class PolymorphicManagerTest(TestCase):
     def test_improperly_configured(self):
-        with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`PolymorphicManager` can only be used '
-                                       'on `BasePolymorphicModel` subclasses.'):
+        with self.assertRaisesMessage(
+            ImproperlyConfigured, '`PolymorphicManager` can only be used on `BasePolymorphicModel` subclasses.'
+        ):
             class NonPolymorphicModel(models.Model):
                 objects = PolymorphicManager()
 

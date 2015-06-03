@@ -10,9 +10,9 @@ from django.utils.functional import LazyObject, new_method_proxy
 
 # TODO: Remove the following when support for Python 2.6 is dropped
 if sys.version_info >= (2, 7):
-    from unittest import skipUnless
+    from unittest import skipUnless  # NOQA
 else:
-    from django.utils.unittest import skipUnless
+    from django.utils.unittest import skipUnless  # NOQA
 
 # TODO: Remove the following when support for Django 1.8 is dropped
 if django.VERSION >= (1, 9):
@@ -66,9 +66,9 @@ if django.VERSION < (1, 6):
 
 # TODO: Remove the following when support for Django 1.4 is dropped
 try:
-    from django.db.models.constants import LOOKUP_SEP
+    from django.db.models.constants import LOOKUP_SEP  # NOQA
 except ImportError:
-    from django.db.models.sql.constants import LOOKUP_SEP
+    from django.db.models.sql.constants import LOOKUP_SEP  # NOQA
 
 # Prior to #18399 being fixed there was no way to retrieve `ContentType`
 # of proxy models while caching it. This is a shim that tries to use the

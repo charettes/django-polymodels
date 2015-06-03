@@ -11,9 +11,9 @@ from .models import Animal, BigSnake, HugeSnake, Mammal, Snake
 
 class BasePolymorphicModelTest(TestCase):
     def test_improperly_configured(self):
-        with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`BasePolymorphicModel` subclasses must '
-                                       'define a `CONTENT_TYPE_FIELD`.'):
+        with self.assertRaisesMessage(
+            ImproperlyConfigured, '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.'
+        ):
             class NoCtFieldModel(BasePolymorphicModel):
                 pass
         with self.assertRaisesMessage(ImproperlyConfigured,

@@ -69,7 +69,8 @@ class PolymorphicTypeFieldTests(TestCase):
         trait.mammal_type = snake_type
         trait.snake_type = snake_type
         with self.assertRaisesMessage(
-            ValidationError, 'Specified content type is not of a subclass of Mammal.'):
+            ValidationError, 'Specified content type is not of a subclass of Mammal.'
+        ):
             trait.full_clean()
 
     def test_valid_subclass(self):
@@ -90,13 +91,13 @@ class PolymorphicTypeFieldTests(TestCase):
         )
 
     def test_invalid_polymorphic_model(self):
-        with self.assertRaisesMessage(AssertionError,
-            "First parameter to `PolymorphicTypeField` must be "
-            "a subclass of `BasePolymorphicModel`"):
+        with self.assertRaisesMessage(
+            AssertionError, "First parameter to `PolymorphicTypeField` must be a subclass of `BasePolymorphicModel`"
+        ):
             PolymorphicTypeField(None)
-        with self.assertRaisesMessage(AssertionError,
-            "First parameter to `PolymorphicTypeField` must be "
-            "a subclass of `BasePolymorphicModel`"):
+        with self.assertRaisesMessage(
+            AssertionError, "First parameter to `PolymorphicTypeField` must be a subclass of `BasePolymorphicModel`"
+        ):
             PolymorphicTypeField(models.Model)
 
     def test_formfield_issues_no_queries(self):

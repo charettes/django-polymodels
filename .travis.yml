@@ -8,32 +8,41 @@ python:
   - 3.4
 
 env:
-  - REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
-  - REQUIREMENTS="django>=1.5,<1.6 django-discover-runner south"
-  - REQUIREMENTS="django>=1.6,<1.7 south"
-  - REQUIREMENTS="django>=1.7,<1.8"
-  - REQUIREMENTS="https://github.com/django/django/archive/master.tar.gz"
+  - DJANGO=1.4
+  - DJANGO=1.5
+  - DJANGO=1.6
+  - DJANGO=1.7
+  - DJANGO=1.8
+  - DJANGO=master
 
 matrix:
   exclude:
+    - python: 2.6
+      env: DJANGO=1.7
+    - python: 2.6
+      env: DJANGO=1.8
+    - python: 2.6
+      env: DJANGO=master
     - python: 3.2
-      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
+      env: DJANGO=1.4
+    - python: 3.2
+      env: DJANGO=master
     - python: 3.3
-      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
+      env: DJANGO=1.4
     - python: 3.4
-      env: REQUIREMENTS="django>=1.4,<1.5 django-discover-runner south"
-    - python: 2.6
-      env: REQUIREMENTS="django>=1.7,<1.8"
-    - python: 2.6
-      env: REQUIREMENTS="https://github.com/django/django/archive/master.tar.gz"
+      env: DJANGO=1.4
+    - python: 3.4
+      env: DJANGO=1.5
+    - python: 3.4
+      env: DJANGO=1.6
   allow_failures:
-    - env: REQUIREMENTS="https://github.com/django/django/archive/master.tar.gz"
+    - env: DJANGO=master
 
 install:
-  - pip install $REQUIREMENTS coveralls -q
+  pip install tox coveralls
 
 script:
-  - python -R -Wonce `which coverage` run `which django-admin.py` test polymodels --pythonpath=`pwd` --settings=polymodels.tests.settings -v2
+  tox -e `python -c 'import sys,os;print("py%d%d-"%sys.version_info[0:2]+os.environ["DJANGO"])'`
 
 after_success:
   - coverage report -m

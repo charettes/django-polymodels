@@ -3,7 +3,8 @@ from __future__ import unicode_literals
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
-from ..models import BasePolymorphicModel
+from polymodels.models import BasePolymorphicModel
+
 from .base import TestCase
 from .models import Animal, BigSnake, HugeSnake, Mammal, Snake
 
@@ -16,18 +17,18 @@ class BasePolymorphicModelTest(TestCase):
             class NoCtFieldModel(BasePolymorphicModel):
                 pass
         with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`polymodels.tests.test_models.InexistentCtFieldModel.CONTENT_TYPE_FIELD` '
+                                      '`tests.test_models.InexistentCtFieldModel.CONTENT_TYPE_FIELD` '
                                       'points to an inexistent field "inexistent_field".'):
             class InexistentCtFieldModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'inexistent_field'
         with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`polymodels.tests.test_models.InvalidCtFieldModel.a_char_field` '
+                                      '`tests.test_models.InvalidCtFieldModel.a_char_field` '
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFieldModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'a_char_field'
                 a_char_field = models.CharField(max_length=255)
         with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`polymodels.tests.test_models.InvalidCtFkFieldToModel.a_fk` '
+                                      '`tests.test_models.InvalidCtFkFieldToModel.a_fk` '
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFkFieldToModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'a_fk'

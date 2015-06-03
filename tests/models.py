@@ -4,8 +4,8 @@ import sys
 
 from django.db import models
 
-from ..fields import PolymorphicTypeField
-from ..models import PolymorphicModel
+from polymodels.fields import PolymorphicTypeField
+from polymodels.models import PolymorphicModel
 
 
 class Zoo(models.Model):

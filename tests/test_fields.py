@@ -5,8 +5,9 @@ from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.query_utils import Q
 
-from ..compat import get_content_type, get_remote_field, skipUnless
-from ..fields import PolymorphicTypeField
+from polymodels.compat import get_content_type, get_remote_field, skipUnless
+from polymodels.fields import PolymorphicTypeField
+
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
 

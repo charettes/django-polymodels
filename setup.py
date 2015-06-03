@@ -18,7 +18,7 @@ setup(
     install_requires=(
         'django>=1.4',
     ),
-    packages=find_packages(),
+    packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
     license='MIT License',
     classifiers=[

@@ -104,6 +104,9 @@ class PolymorphicManagerTest(TestCase):
             class NonPolymorphicModel(models.Model):
                 objects = PolymorphicManager()
 
+                class Meta:
+                    app_label = 'polymodels'
+
     def test_proxy_filtering(self):
         """
         Make sure managers attached to proxy models returns a queryset of

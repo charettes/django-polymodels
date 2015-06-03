@@ -6,10 +6,12 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.fields import FieldDoesNotExist
 
-from .compat import get_content_type, get_content_types, get_remote_field, get_remote_model, model_name, LOOKUP_SEP
+from .compat import (
+    LOOKUP_SEP, get_content_type, get_content_types, get_remote_field,
+    get_remote_model, model_name,
+)
 from .managers import PolymorphicManager
 from .utils import copy_fields
-
 
 EMPTY_ACCESSOR = ([], None, '')
 

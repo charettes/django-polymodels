@@ -6,13 +6,14 @@ from inspect import isclass
 import django
 from django import forms
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import ForeignKey, Q
+from django.db.models import Q, ForeignKey
 from django.db.models.fields import NOT_PROVIDED
-from django.db.models.fields.related import RelatedField, ManyToOneRel
+from django.db.models.fields.related import ManyToOneRel, RelatedField
 from django.utils.translation import ugettext_lazy as _
 
 from .compat import (
-    get_content_type, get_remote_field, get_remote_model, lazy_related_operation, LazyObject, string_types
+    LazyObject, get_content_type, get_remote_field, get_remote_model,
+    lazy_related_operation, string_types,
 )
 from .models import BasePolymorphicModel
 

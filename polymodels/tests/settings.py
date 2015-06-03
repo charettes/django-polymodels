@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from django.conf.global_settings import TEST_RUNNER
 
-
 SECRET_KEY = 'not-anymore'
 
 DATABASES = {

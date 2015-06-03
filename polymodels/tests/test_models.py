@@ -4,7 +4,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 from ..models import BasePolymorphicModel
-
 from .base import TestCase
 from .models import Animal, BigSnake, HugeSnake, Mammal, Snake
 

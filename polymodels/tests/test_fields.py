@@ -7,10 +7,8 @@ from django.db.models.query_utils import Q
 
 from ..compat import get_content_type, get_remote_field, skipUnless
 from ..fields import PolymorphicTypeField
-
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
-
 
 try:
     import south

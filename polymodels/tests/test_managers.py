@@ -5,7 +5,6 @@ from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
 from ..managers import PolymorphicManager
-
 from .base import TestCase
 from .models import Animal, BigSnake, HugeSnake, Mammal, Monkey, Snake
 

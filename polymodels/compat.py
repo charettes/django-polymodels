@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 import operator
-
 import sys
 
 import django

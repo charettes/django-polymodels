@@ -1,27 +1,24 @@
 from __future__ import unicode_literals
 
-from functools import partial
 from inspect import isclass
 
-import django
 from django import forms
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, ForeignKey
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.related import ManyToOneRel, RelatedField
+from django.utils.functional import LazyObject
+from django.utils.six import string_types
 from django.utils.translation import ugettext_lazy as _
 
-from .compat import (
-    LazyObject, get_content_type, get_remote_field, get_remote_model,
-    lazy_related_operation, string_types,
-)
+from .compat import get_remote_field, get_remote_model, lazy_related_operation
 from .models import BasePolymorphicModel
+from .utils import get_content_type
 
 
 class PolymorphicManyToOneRel(ManyToOneRel):
     """
-    Relationship that generates a `limit_choices_to` based on it's polymorphic
-    type subclasses.
+    Relationship that generates a `limit_choices_to` based on it's polymorphic type subclasses.
     """
 
     @property
@@ -34,15 +31,13 @@ class PolymorphicManyToOneRel(ManyToOneRel):
             limit_choices_to = dict(limit_choices_to, **subclasses_lookup)
         elif isinstance(limit_choices_to, Q):
             limit_choices_to = limit_choices_to & Q(**subclasses_lookup)
-        # Cache it
         self.__dict__['limit_choices_to'] = limit_choices_to
         return limit_choices_to
 
     @limit_choices_to.setter
     def limit_choices_to(self, value):
         self._limit_choices_to = value
-        # Removed the cached value and return it
-        return self.__dict__.pop('limit_choices_to', None)
+        self.__dict__.pop('limit_choices_to', None)
 
 
 class LazyPolymorphicTypeQueryset(LazyObject):
@@ -103,20 +98,21 @@ class PolymorphicTypeField(ForeignKey):
 
     def do_polymorphic_type(self, polymorphic_type):
         if self.default is NOT_PROVIDED and not self.null:
-            self.default = partial(get_content_type, polymorphic_type)
+            self.default = lambda: get_content_type(polymorphic_type)
         self.type = polymorphic_type.__name__
         self.error_messages['invalid'] = (
-            'Specified content type is not of a subclass of %s.' %
-            polymorphic_type._meta.object_name
+            'Specified content type is not of a subclass of %s.' % polymorphic_type._meta.object_name
         )
 
     def formfield(self, **kwargs):
         db = kwargs.pop('using', None)
         remote_model = get_remote_model(get_remote_field(self))
         if isinstance(remote_model, string_types):
-            raise ValueError("Cannot create form field for %r yet, because "
-                             "its related model %r has not been loaded yet" %
-                             (self.name, remote_model))
+            raise ValueError(
+                "Cannot create form field for %r yet, because its related model %r has not been loaded yet" % (
+                    self.name, remote_model
+                )
+            )
         defaults = {
             'form_class': forms.ModelChoiceField,
             'queryset': LazyPolymorphicTypeQueryset(get_remote_field(self), db),
@@ -125,14 +121,7 @@ class PolymorphicTypeField(ForeignKey):
         defaults.update(kwargs)
         return super(RelatedField, self).formfield(**defaults)
 
-    def south_field_triple(self):
-        """Provide a suitable description of this field for South."""
-        from south.modelsinspector import introspector
-        args, kwargs = introspector(self)
-        return 'django.db.models.fields.related.ForeignKey', args, kwargs
-
-    if django.VERSION >= (1, 7):
-        def deconstruct(self):
-            name, _, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
-            path = 'django.db.models.fields.related.ForeignKey'
-            return name, path, args, kwargs
+    def deconstruct(self):
+        name, _, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
+        path = 'django.db.models.fields.related.ForeignKey'
+        return name, path, args, kwargs

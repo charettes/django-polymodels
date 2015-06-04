@@ -1,20 +1,15 @@
 from __future__ import unicode_literals
 
-import django
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.models.query_utils import Q
 
-from polymodels.compat import get_content_type, get_remote_field, skipUnless
+from polymodels.compat import get_remote_field
 from polymodels.fields import PolymorphicTypeField
+from polymodels.utils import get_content_type
 
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
-
-try:
-    import south
-except ImportError:
-    south = None
 
 
 class PolymorphicTypeFieldTests(TestCase):
@@ -107,36 +102,16 @@ class PolymorphicTypeFieldTests(TestCase):
         trait_type = Trait._meta.get_field('trait_type')
         with self.assertNumQueries(0):
             formfield = trait_type.formfield()
-        self.assertSetEqual(set(formfield.queryset), set([
+        self.assertSetEqual(set(formfield.queryset), {
             get_content_type(Trait),
-            get_content_type(AcknowledgedTrait)
-        ]))
+            get_content_type(AcknowledgedTrait),
+        })
 
     def test_unresolved_relationship_formfield(self):
         field = PolymorphicTypeField('Snake', to='app.Unresolved')
         with self.assertRaises(ValueError):
             field.formfield()
 
-    @skipUnless(south, 'South is not installed.')
-    def test_south_field_triple(self):
-        field = PolymorphicTypeField('Snake')
-        self.assertEqual(field.south_field_triple(), (
-            'django.db.models.fields.related.ForeignKey', [], {
-                'related_name': repr('+'),
-                'to': "orm['contenttypes.ContentType']"
-            }
-        ))
-        field = PolymorphicTypeField('Snake', null=True)
-        self.assertEqual(field.south_field_triple(), (
-            'django.db.models.fields.related.ForeignKey', [], {
-                'related_name': repr('+'),
-                'to': "orm['contenttypes.ContentType']",
-                'null': repr(True)
-            }
-        ))
-
-    @skipUnless(django.VERSION >= (1, 7),
-                'Field deconstruction is only supported on Django 1.7+')
     def test_field_deconstruction(self):
         field = PolymorphicTypeField('Snake')
         self.assertEqual(field.deconstruct(), (

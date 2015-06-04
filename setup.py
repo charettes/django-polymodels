@@ -16,7 +16,7 @@ setup(
     author='Simon Charette',
     author_email='charette.s@gmail.com',
     install_requires=(
-        'django>=1.4',
+        'Django>=1.7',
     ),
     packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,
@@ -30,11 +30,11 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Python',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
         'Topic :: Software Development :: Libraries :: Python Modules'
     ],
 )

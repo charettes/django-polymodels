@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
 
 from django.forms import models
-
-from .compat import with_metaclass
+from django.utils.six import with_metaclass
 
 
 class PolymorphicModelFormMetaclass(models.ModelFormMetaclass):

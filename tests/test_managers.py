@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
@@ -20,18 +19,12 @@ class PolymorphicQuerySetTest(TestCase):
         HugeSnake.objects.create(name='huge snake', length=155)
         # Assert `select_subclasses` correctly calls `select_related` and `filter`.
         animals = Animal.objects.select_subclasses()
-        animals_expected_num_queries = 1
         animals_expected_query_select_related = {
             'mammal': {'monkey': {}},
-            'snake': {}
+            'snake': {},
         }
-        # We can't do `select_related` on multiple one-to-one
-        # relationships on django < 1.6, thus it generates extra queries
-        if django.VERSION < (1, 6):
-            animals_expected_num_queries += Monkey.objects.count()
-            animals_expected_query_select_related['mammal'] = {}
         self.assertEqual(animals.query.select_related, animals_expected_query_select_related)
-        with self.assertNumQueries(animals_expected_num_queries):
+        with self.assertNumQueries(1):
             self.assertQuerysetEqual(animals.all(),
                                      ['<Animal: animal>',
                                       '<Mammal: mammal>',
@@ -41,20 +34,14 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<HugeSnake: huge snake>'])
         # Filter out non-mammal (direct subclass)
         animal_mammals = Animal.objects.select_subclasses(Mammal)
-        animal_mammals_expected_num_queries = 1
         animal_mammals_expected_query_select_related = {
             'mammal': {'monkey': {}}
         }
-        # We can't do `select_related` on multiple one-to-one
-        # relationships on django < 1.6, thus it generates extra queries
-        if django.VERSION < (1, 6):
-            animal_mammals_expected_num_queries += Monkey.objects.count()
-            animal_mammals_expected_query_select_related['mammal'] = {}
         self.assertEqual(
             animal_mammals.query.select_related,
             animal_mammals_expected_query_select_related
         )
-        with self.assertNumQueries(animal_mammals_expected_num_queries):
+        with self.assertNumQueries(1):
             self.assertQuerysetEqual(animal_mammals.all(),
                                      ['<Mammal: mammal>',
                                       '<Monkey: monkey>'])

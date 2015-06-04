@@ -4,14 +4,12 @@ import django
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 
-from .compat import (
-    LOOKUP_SEP, get_content_type, get_content_types, get_remote_field,
-    get_remote_model, model_name,
-)
+from .compat import get_remote_field, get_remote_model
 from .managers import PolymorphicManager
-from .utils import copy_fields
+from .utils import copy_fields, get_content_type, get_content_types
 
 EMPTY_ACCESSOR = ([], None, '')
 
@@ -38,7 +36,7 @@ class BasePolymorphicModel(models.Model):
 
     def save(self, *args, **kwargs):
         if self.pk is None:
-            content_type = get_content_type(self.__class__, self._state.db)
+            content_type = get_content_type(self.__class__)
             setattr(self, self.CONTENT_TYPE_FIELD, content_type)
         return super(BasePolymorphicModel, self).save(*args, **kwargs)
 
@@ -47,7 +45,7 @@ class BasePolymorphicModel(models.Model):
         query_name = kwargs.pop('query_name', None) or cls.CONTENT_TYPE_FIELD
         if models:
             query_name = "%s__in" % query_name
-            value = set(ct.pk for ct in get_content_types(models).values())
+            value = set(ct.pk for ct in get_content_types(*models).values())
         else:
             value = get_content_type(cls).pk
         return {query_name: value}
@@ -116,7 +114,7 @@ def prepare_polymorphic_model(sender, **kwargs):
                 if parent_opts.proxy:
                     parents.insert(0, parent_opts.proxy_for_model)
                 else:
-                    attrs.insert(0, model_name(parent_opts))
+                    attrs.insert(0, parent_opts.model_name)
                     parents = list(parent._meta.parents.keys()) + parents
 
 models.signals.class_prepared.connect(prepare_polymorphic_model)

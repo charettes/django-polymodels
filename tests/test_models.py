@@ -15,24 +15,37 @@ class BasePolymorphicModelTest(TestCase):
             ImproperlyConfigured, '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.'
         ):
             class NoCtFieldModel(BasePolymorphicModel):
-                pass
+                class Meta:
+                    app_label = 'polymodels'
+
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`tests.test_models.InexistentCtFieldModel.CONTENT_TYPE_FIELD` '
                                       'points to an inexistent field "inexistent_field".'):
             class InexistentCtFieldModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'inexistent_field'
+
+                class Meta:
+                    app_label = 'polymodels'
+
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`tests.test_models.InvalidCtFieldModel.a_char_field` '
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFieldModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'a_char_field'
                 a_char_field = models.CharField(max_length=255)
+
+                class Meta:
+                    app_label = 'polymodels'
+
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`tests.test_models.InvalidCtFkFieldToModel.a_fk` '
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFkFieldToModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'a_fk'
                 a_fk = models.ForeignKey('self')
+
+                class Meta:
+                    app_label = 'polymodels'
 
     def test_type_cast(self):
         animal_dog = Animal.objects.create(name='dog')

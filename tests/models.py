@@ -1,8 +1,7 @@
 from __future__ import unicode_literals
 
-import sys
-
 from django.db import models
+from django.utils.encoding import python_2_unicode_compatible
 
 from polymodels.fields import PolymorphicTypeField
 from polymodels.models import PolymorphicModel
@@ -15,6 +14,7 @@ class Zoo(models.Model):
         app_label = 'polymodels'
 
 
+@python_2_unicode_compatible
 class Animal(PolymorphicModel):
     name = models.CharField(max_length=50)
 
@@ -24,12 +24,6 @@ class Animal(PolymorphicModel):
 
     def __str__(self):
         return self.name
-
-    if not sys.version_info[0] == 3:
-        __unicode__ = __str__
-
-        def __str__(self):
-            return self.__unicode__().encode('utf-8')
 
 
 class Mammal(Animal):

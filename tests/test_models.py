@@ -43,7 +43,7 @@ class BasePolymorphicModelTest(TestCase):
                                       'must be a `ForeignKey` to `ContentType`.'):
             class InvalidCtFkFieldToModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'a_fk'
-                a_fk = models.ForeignKey('self')
+                a_fk = models.ForeignKey('self', on_delete=models.CASCADE)
 
                 Meta = options
 

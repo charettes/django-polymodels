@@ -37,9 +37,9 @@ class Monkey(Mammal):
 
 
 class Trait(PolymorphicModel):
-    trait_type = PolymorphicTypeField('self', blank=True, null=True)
-    mammal_type = PolymorphicTypeField(Mammal, blank=True, null=True)
-    snake_type = PolymorphicTypeField('Snake')
+    trait_type = PolymorphicTypeField('self', on_delete=models.CASCADE, blank=True, null=True)
+    mammal_type = PolymorphicTypeField(Mammal, on_delete=models.CASCADE, blank=True, null=True)
+    snake_type = PolymorphicTypeField('Snake', on_delete=models.CASCADE)
 
     class Meta:
         app_label = 'polymodels'

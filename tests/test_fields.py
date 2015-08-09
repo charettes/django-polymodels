@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import django
 from django.apps.registry import Apps
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -166,31 +167,38 @@ class PolymorphicTypeFieldTests(TestCase):
                 apps = test_apps
                 app_label = 'polymodels'
 
+        def django_version_agnostic(deconstruction):
+            # As of Django 1.9+ on_delete is a required parameter and
+            # doesn't default to models.CASCADE anymore.
+            if django.VERSION >= (1, 9):
+                deconstruction['on_delete'] = models.CASCADE
+            return deconstruction
+
         self.assertDeconstructionEqual(Foo._meta.get_field('foo'), (
-            'foo', 'django.db.models.fields.related.ForeignKey', [], {
+            'foo', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'default': ContentTypeReference('polymodels', 'foo'),
-            }
+            })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo'), (
-            'foo', 'django.db.models.fields.related.ForeignKey', [], {
+            'foo', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'default': ContentTypeReference('polymodels', 'foo'),
-            }
+            })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_null'), (
-            'foo_null', 'django.db.models.fields.related.ForeignKey', [], {
+            'foo_null', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'null': True,
-            }
+            })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_default'), (
-            'foo_default', 'django.db.models.fields.related.ForeignKey', [], {
+            'foo_default', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'default': get_content_type(Foo).pk,
-            }
+            })
         ))

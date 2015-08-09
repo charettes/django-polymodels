@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.apps.registry import Apps
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
@@ -11,12 +12,14 @@ from .models import Animal, BigSnake, HugeSnake, Mammal, Snake
 
 class BasePolymorphicModelTest(TestCase):
     def test_improperly_configured(self):
+        test_apps = Apps()
+        options = type(str('Meta'), (), {'apps': test_apps, 'app_label': 'polymodels'})
+
         with self.assertRaisesMessage(
             ImproperlyConfigured, '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.'
         ):
             class NoCtFieldModel(BasePolymorphicModel):
-                class Meta:
-                    app_label = 'polymodels'
+                Meta = options
 
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`tests.test_models.InexistentCtFieldModel.CONTENT_TYPE_FIELD` '
@@ -24,8 +27,7 @@ class BasePolymorphicModelTest(TestCase):
             class InexistentCtFieldModel(BasePolymorphicModel):
                 CONTENT_TYPE_FIELD = 'inexistent_field'
 
-                class Meta:
-                    app_label = 'polymodels'
+                Meta = options
 
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`tests.test_models.InvalidCtFieldModel.a_char_field` '
@@ -34,8 +36,7 @@ class BasePolymorphicModelTest(TestCase):
                 CONTENT_TYPE_FIELD = 'a_char_field'
                 a_char_field = models.CharField(max_length=255)
 
-                class Meta:
-                    app_label = 'polymodels'
+                Meta = options
 
         with self.assertRaisesMessage(ImproperlyConfigured,
                                       '`tests.test_models.InvalidCtFkFieldToModel.a_fk` '
@@ -44,8 +45,7 @@ class BasePolymorphicModelTest(TestCase):
                 CONTENT_TYPE_FIELD = 'a_fk'
                 a_fk = models.ForeignKey('self')
 
-                class Meta:
-                    app_label = 'polymodels'
+                Meta = options
 
     def test_type_cast(self):
         animal_dog = Animal.objects.create(name='dog')

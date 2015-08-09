@@ -125,7 +125,7 @@ class PolymorphicTypeFieldTests(TestCase):
         })
 
     def test_unresolved_relationship_formfield(self):
-        field = PolymorphicTypeField('Snake', to='app.Unresolved')
+        field = PolymorphicTypeField('Snake', to='app.Unresolved', on_delete=models.CASCADE)
         with self.assertRaises(ValueError):
             field.formfield()
 
@@ -152,16 +152,16 @@ class PolymorphicTypeFieldTests(TestCase):
         test_apps = Apps()
 
         class Foo(PolymorphicModel):
-            foo = PolymorphicTypeField('self')
+            foo = PolymorphicTypeField('self', on_delete=models.CASCADE)
 
             class Meta:
                 apps = test_apps
                 app_label = 'polymodels'
 
         class Bar(models.Model):
-            foo = PolymorphicTypeField('Foo')
-            foo_null = PolymorphicTypeField(Foo, null=True)
-            foo_default = PolymorphicTypeField(Foo, default=get_content_type(Foo).pk)
+            foo = PolymorphicTypeField('Foo', on_delete=models.CASCADE)
+            foo_null = PolymorphicTypeField(Foo, on_delete=models.CASCADE, null=True)
+            foo_default = PolymorphicTypeField(Foo, on_delete=models.CASCADE, default=get_content_type(Foo).pk)
 
             class Meta:
                 apps = test_apps

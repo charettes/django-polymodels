@@ -3,10 +3,12 @@ from __future__ import unicode_literals
 from inspect import isclass
 
 from django import forms
+from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db.models import Q, ForeignKey
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.related import ManyToOneRel, RelatedField
+from django.utils.deconstruct import deconstructible
 from django.utils.functional import LazyObject
 from django.utils.six import string_types
 from django.utils.translation import ugettext_lazy as _
@@ -51,6 +53,25 @@ class LazyPolymorphicTypeQueryset(LazyObject):
         self._wrapped = get_remote_model(remote_field)._default_manager.using(db).complex_filter(
             remote_field.limit_choices_to
         )
+
+
+@deconstructible
+class ContentTypeReference(object):
+    def __init__(self, app_label, model_name):
+        self.app_label = app_label
+        self.model_name = model_name
+
+    def __eq__(self, other):
+        return isinstance(other, self.__class__) and (
+            (self.app_label, self.model_name) == (other.app_label, other.model_name)
+        )
+
+    def __call__(self):
+        model = apps.get_model(self.app_label, self.model_name)
+        return get_content_type(model).pk
+
+    def __repr__(self):
+        return str("ContentTypeReference(%r, %r)" % (self.app_label, self.model_name))
 
 
 class PolymorphicTypeField(ForeignKey):
@@ -98,7 +119,8 @@ class PolymorphicTypeField(ForeignKey):
 
     def do_polymorphic_type(self, polymorphic_type):
         if self.default is NOT_PROVIDED and not self.null:
-            self.default = lambda: get_content_type(polymorphic_type)
+            opts = polymorphic_type._meta
+            self.default = ContentTypeReference(opts.app_label, opts.model_name)
         self.type = polymorphic_type.__name__
         self.error_messages['invalid'] = (
             'Specified content type is not of a subclass of %s.' % polymorphic_type._meta.object_name

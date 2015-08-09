@@ -1,15 +1,31 @@
 from __future__ import unicode_literals
 
+from django.apps.registry import Apps
 from django.core.exceptions import ValidationError
 from django.db import models
+from django.db.migrations.writer import MigrationWriter
 from django.db.models.query_utils import Q
 
 from polymodels.compat import get_remote_field
-from polymodels.fields import PolymorphicTypeField
+from polymodels.fields import ContentTypeReference, PolymorphicTypeField
+from polymodels.models import PolymorphicModel
 from polymodels.utils import get_content_type
 
 from .base import TestCase
 from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
+
+
+class ContentTypeReferenceTests(TestCase):
+    reference = ContentTypeReference(str('polymodels'), str('snake'))
+
+    def test_equality(self):
+        self.assertEqual(self.reference, ContentTypeReference('polymodels', 'snake'))
+
+    def test_retreival(self):
+        self.assertEqual(self.reference(), get_content_type(Snake).pk)
+
+    def test_repr(self):
+        self.assertEqual(repr(self.reference), "ContentTypeReference('polymodels', 'snake')")
 
 
 class PolymorphicTypeFieldTests(TestCase):
@@ -112,19 +128,69 @@ class PolymorphicTypeFieldTests(TestCase):
         with self.assertRaises(ValueError):
             field.formfield()
 
+    def safe_exec(self, string, value=None):
+        l = {}
+        try:
+            exec(string, globals(), l)
+        except Exception as e:
+            if value:
+                self.fail("Could not exec %r (from value %r): %s" % (string.strip(), value, e))
+            else:
+                self.fail("Could not exec %r: %s" % (string.strip(), e))
+        return l
+
+    def serialize_round_trip(self, value):
+        string, imports = MigrationWriter.serialize(value)
+        return self.safe_exec("%s\ntest_value_result = %s" % ("\n".join(imports), string), value)['test_value_result']
+
+    def assertDeconstructionEqual(self, field, deconstructed):
+        self.assertEqual(field.deconstruct(), deconstructed)
+        self.assertEqual(self.serialize_round_trip(deconstructed), deconstructed)
+
     def test_field_deconstruction(self):
-        field = PolymorphicTypeField('Snake')
-        self.assertEqual(field.deconstruct(), (
-            None, 'django.db.models.fields.related.ForeignKey', [], {
+        test_apps = Apps()
+
+        class Foo(PolymorphicModel):
+            foo = PolymorphicTypeField('self')
+
+            class Meta:
+                apps = test_apps
+                app_label = 'polymodels'
+
+        class Bar(models.Model):
+            foo = PolymorphicTypeField('Foo')
+            foo_null = PolymorphicTypeField(Foo, null=True)
+            foo_default = PolymorphicTypeField(Foo, default=get_content_type(Foo).pk)
+
+            class Meta:
+                apps = test_apps
+                app_label = 'polymodels'
+
+        self.assertDeconstructionEqual(Foo._meta.get_field('foo'), (
+            'foo', 'django.db.models.fields.related.ForeignKey', [], {
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
+                'default': ContentTypeReference('polymodels', 'foo'),
             }
         ))
-        field = PolymorphicTypeField('Snake', null=True)
-        self.assertEqual(field.deconstruct(), (
-            None, 'django.db.models.fields.related.ForeignKey', [], {
+        self.assertDeconstructionEqual(Bar._meta.get_field('foo'), (
+            'foo', 'django.db.models.fields.related.ForeignKey', [], {
                 'to': 'contenttypes.ContentType',
-                'null': True,
                 'related_name': '+',
+                'default': ContentTypeReference('polymodels', 'foo'),
+            }
+        ))
+        self.assertDeconstructionEqual(Bar._meta.get_field('foo_null'), (
+            'foo_null', 'django.db.models.fields.related.ForeignKey', [], {
+                'to': 'contenttypes.ContentType',
+                'related_name': '+',
+                'null': True,
+            }
+        ))
+        self.assertDeconstructionEqual(Bar._meta.get_field('foo_default'), (
+            'foo_default', 'django.db.models.fields.related.ForeignKey', [], {
+                'to': 'contenttypes.ContentType',
+                'related_name': '+',
+                'default': get_content_type(Foo).pk,
             }
         ))

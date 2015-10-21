@@ -15,7 +15,7 @@ to their original ``ContentType``.
 Installation
 ************
 
->>> pip install polymodels
+>>> pip install django-polymodels
 
 Make sure ``'django.contrib.contenttypes'`` and ``'polymodels'`` are in
 your `INSTALLED_APPS`

@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 from django.apps import apps as global_apps
 from django.contrib.contenttypes.models import ContentType
-from django.core.exceptions import ImproperlyConfigured
+from django.core import checks
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
@@ -56,6 +56,39 @@ class BasePolymorphicModel(models.Model):
             query_name=query_name
         )
 
+    @classmethod
+    def check(cls, **kwargs):
+        errors = super(BasePolymorphicModel, cls).check(**kwargs)
+        try:
+            content_type_field_name = getattr(cls, 'CONTENT_TYPE_FIELD')
+        except AttributeError:
+            errors.append(checks.Error(
+                '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.',
+                hint=None,
+                obj=cls,
+                id='polymodels.E001',
+            ))
+        else:
+            try:
+                content_type_field = cls._meta.get_field(content_type_field_name)
+            except FieldDoesNotExist:
+                errors.append(checks.Error(
+                    "`CONTENT_TYPE_FIELD` points to an inexistent field '%s'." % content_type_field_name,
+                    hint=None,
+                    obj=cls,
+                    id='polymodels.E002',
+                ))
+            else:
+                if (not isinstance(content_type_field, models.ForeignKey) or
+                        get_remote_model(get_remote_field(content_type_field)) is not ContentType):
+                    errors.append(checks.Error(
+                        "`%s` must be a `ForeignKey` to `ContentType`." % content_type_field_name,
+                        hint=None,
+                        obj=content_type_field,
+                        id='polymodels.E003',
+                    ))
+        return errors
+
 
 class PolymorphicModel(BasePolymorphicModel):
     CONTENT_TYPE_FIELD = 'content_type'
@@ -76,28 +109,6 @@ def prepare_polymorphic_model(sender, **kwargs):
             # Models registered to non-installed application should not be
             # considered as Django will ignore them by default.
             return
-        try:
-            content_type_field_name = getattr(sender, 'CONTENT_TYPE_FIELD')
-        except AttributeError:
-            raise ImproperlyConfigured(
-                '`BasePolymorphicModel` subclasses must '
-                'define a `CONTENT_TYPE_FIELD`.'
-            )
-        else:
-            try:
-                content_type_field = opts.get_field(content_type_field_name)
-            except FieldDoesNotExist:
-                raise ImproperlyConfigured(
-                    '`%s.%s.CONTENT_TYPE_FIELD` points to an inexistent field "%s".'
-                    % (sender.__module__, sender.__name__, content_type_field_name)
-                )
-            else:
-                if (not isinstance(content_type_field, models.ForeignKey) or
-                        get_remote_model(get_remote_field(content_type_field)) is not ContentType):
-                    raise ImproperlyConfigured(
-                        '`%s.%s.%s` must be a `ForeignKey` to `ContentType`.'
-                        % (sender.__module__, sender.__name__, content_type_field_name)
-                    )
         setattr(opts, '_subclass_accessors', {})
         parents = [sender]
         proxy = sender if opts.proxy else None

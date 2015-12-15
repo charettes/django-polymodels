@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 from django.apps.registry import Apps
-from django.core.exceptions import ImproperlyConfigured
+from django.core import checks
 from django.db import models
 
 from polymodels.models import BasePolymorphicModel
@@ -11,41 +11,57 @@ from .models import Animal, BigSnake, HugeSnake, Mammal, Snake
 
 
 class BasePolymorphicModelTest(TestCase):
-    def test_improperly_configured(self):
+    def test_checks(self):
         test_apps = Apps()
         options = type(str('Meta'), (), {'apps': test_apps, 'app_label': 'polymodels'})
 
-        with self.assertRaisesMessage(
-            ImproperlyConfigured, '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.'
-        ):
-            class NoCtFieldModel(BasePolymorphicModel):
-                Meta = options
+        class NoCtFieldModel(BasePolymorphicModel):
+            Meta = options
 
-        with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`tests.test_models.InexistentCtFieldModel.CONTENT_TYPE_FIELD` '
-                                      'points to an inexistent field "inexistent_field".'):
-            class InexistentCtFieldModel(BasePolymorphicModel):
-                CONTENT_TYPE_FIELD = 'inexistent_field'
+        self.assertIn(checks.Error(
+            '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.',
+            hint=None,
+            obj=NoCtFieldModel,
+            id='polymodels.E001',
+        ), NoCtFieldModel.check())
 
-                Meta = options
+        class InexistentCtFieldModel(BasePolymorphicModel):
+            CONTENT_TYPE_FIELD = 'inexistent_field'
 
-        with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`tests.test_models.InvalidCtFieldModel.a_char_field` '
-                                      'must be a `ForeignKey` to `ContentType`.'):
-            class InvalidCtFieldModel(BasePolymorphicModel):
-                CONTENT_TYPE_FIELD = 'a_char_field'
-                a_char_field = models.CharField(max_length=255)
+            Meta = options
 
-                Meta = options
+        self.assertIn(checks.Error(
+            "`CONTENT_TYPE_FIELD` points to an inexistent field 'inexistent_field'.",
+            hint=None,
+            obj=InexistentCtFieldModel,
+            id='polymodels.E002',
+        ), InexistentCtFieldModel.check())
 
-        with self.assertRaisesMessage(ImproperlyConfigured,
-                                      '`tests.test_models.InvalidCtFkFieldToModel.a_fk` '
-                                      'must be a `ForeignKey` to `ContentType`.'):
-            class InvalidCtFkFieldToModel(BasePolymorphicModel):
-                CONTENT_TYPE_FIELD = 'a_fk'
-                a_fk = models.ForeignKey('self', on_delete=models.CASCADE)
+        class InvalidCtFieldModel(BasePolymorphicModel):
+            CONTENT_TYPE_FIELD = 'a_char_field'
+            a_char_field = models.CharField(max_length=255)
 
-                Meta = options
+            Meta = options
+
+        self.assertIn(checks.Error(
+            "`a_char_field` must be a `ForeignKey` to `ContentType`.",
+            hint=None,
+            obj=InvalidCtFieldModel._meta.get_field('a_char_field'),
+            id='polymodels.E003',
+        ), InvalidCtFieldModel.check())
+
+        class InvalidCtFkFieldToModel(BasePolymorphicModel):
+            CONTENT_TYPE_FIELD = 'a_fk'
+            a_fk = models.ForeignKey('self', on_delete=models.CASCADE)
+
+            Meta = options
+
+        self.assertIn(checks.Error(
+            "`a_fk` must be a `ForeignKey` to `ContentType`.",
+            hint=None,
+            obj=InvalidCtFkFieldToModel._meta.get_field('a_fk'),
+            id='polymodels.E003',
+        ), InvalidCtFkFieldToModel.check())
 
     def test_type_cast(self):
         animal_dog = Animal.objects.create(name='dog')

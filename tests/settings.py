@@ -11,6 +11,7 @@ DATABASES = {
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'polymodels',
+    'tests',
 ]
 
 SILENCED_SYSTEM_CHECKS = ['1_7.W001']

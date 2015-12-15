@@ -1,10 +1,8 @@
 from __future__ import unicode_literals
 
-from django.apps import apps as global_apps
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.db import models
-from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 
 from .compat import get_remote_field, get_remote_model
@@ -98,31 +96,3 @@ class PolymorphicModel(BasePolymorphicModel):
 
     class Meta:
         abstract = True
-
-
-def prepare_polymorphic_model(sender, **kwargs):
-    if issubclass(sender, BasePolymorphicModel):
-        opts = sender._meta
-        try:
-            global_apps.get_app_config(opts.app_label)
-        except LookupError:
-            # Models registered to non-installed application should not be
-            # considered as Django will ignore them by default.
-            return
-        setattr(opts, '_subclass_accessors', {})
-        parents = [sender]
-        proxy = sender if opts.proxy else None
-        attrs = []
-        while parents:
-            parent = parents.pop(0)
-            if issubclass(parent, BasePolymorphicModel):
-                parent_opts = parent._meta
-                lookup = LOOKUP_SEP.join(attrs)
-                parent_opts._subclass_accessors[sender] = (tuple(attrs), proxy, lookup)
-                if parent_opts.proxy:
-                    parents.insert(0, parent_opts.proxy_for_model)
-                else:
-                    attrs.insert(0, parent_opts.model_name)
-                    parents = list(parent._meta.parents.keys()) + parents
-
-models.signals.class_prepared.connect(prepare_polymorphic_model)

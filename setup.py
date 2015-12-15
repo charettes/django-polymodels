@@ -9,7 +9,7 @@ long_desc = open('README.rst').read()
 
 setup(
     name='django-polymodels',
-    version='.'.join(str(v) for v in __version__),
+    version=__version__,
     description='Polymorphic models implementation for django',
     long_description=long_desc,
     url=github_url,

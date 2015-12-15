@@ -5,14 +5,10 @@ language: python
 env:
   - TOXENV=flake8
   - TOXENV=isort
-  - TOXENV=py27-1.7
   - TOXENV=py27-1.8
   - TOXENV=py27-master
-  - TOXENV=py32-1.7
   - TOXENV=py32-1.8
-  - TOXENV=py33-1.7
   - TOXENV=py33-1.8
-  - TOXENV=py34-1.7
   - TOXENV=py34-1.8
   - TOXENV=py34-master
 

@@ -1,8 +1,5 @@
 from __future__ import unicode_literals
 
-import warnings
-
-import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
@@ -81,13 +78,3 @@ class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):
             # Select only associated model and its subclasses.
             queryset = queryset.filter(**self.model.subclasses_lookup())
         return queryset
-
-    # TODO: Remove when dropping support for Django 1.7
-    if django.VERSION < (1, 8):
-        def get_query_set(self):
-            warnings.warn(
-                "`PolymorphicManager.get_query_set` is deprecated, use `get_queryset` instead",
-                DeprecationWarning,
-                stacklevel=2
-            )
-            return PolymorphicManager.get_queryset(self)

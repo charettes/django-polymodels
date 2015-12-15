@@ -16,7 +16,7 @@ setup(
     author='Simon Charette',
     author_email='charette.s@gmail.com',
     install_requires=(
-        'Django>=1.7',
+        'Django>=1.8',
     ),
     packages=find_packages(exclude=['tests', 'tests.*']),
     include_package_data=True,

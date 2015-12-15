@@ -127,18 +127,6 @@ iteration, the fetched instanced are converted to their correct type by calling
 ``BasePolymorphicModel.type_cast``. Note that those lookups are cached on class
 creation to avoid computing them on every single query.
 
-*******
-Caution
-*******
-
-Prior to Django 1.6 it was not possible to issue a ``select_related`` over
-multiple one-to-one relationships. For example, given the models defined
-`above`_, ``Animal.objects.select_related('mammal__dog')`` would throw a strange
-``TypeError``. To work around this issue, ``select_subclasses`` limits such
-lookups to one level deep if you're using a version of django with `this issue`_.
-
-.. _above: #usage
-.. _this issue: https://code.djangoproject.com/ticket/16572
 
 ******************
 Note of the author

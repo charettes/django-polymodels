@@ -26,6 +26,11 @@ class Animal(PolymorphicModel):
         return self.name
 
 
+class NotInstalledAnimal(Animal):
+    class Meta:
+        app_label = 'not_installed'
+
+
 class Mammal(Animal):
     class Meta:
         app_label = 'polymodels'

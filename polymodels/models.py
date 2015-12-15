@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+from django.apps import apps as global_apps
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
@@ -69,6 +70,12 @@ class PolymorphicModel(BasePolymorphicModel):
 def prepare_polymorphic_model(sender, **kwargs):
     if issubclass(sender, BasePolymorphicModel):
         opts = sender._meta
+        try:
+            global_apps.get_app_config(opts.app_label)
+        except LookupError:
+            # Models registered to non-installed application should not be
+            # considered as Django will ignore them by default.
+            return
         try:
             content_type_field_name = getattr(sender, 'CONTENT_TYPE_FIELD')
         except AttributeError:

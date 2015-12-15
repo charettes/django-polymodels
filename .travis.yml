@@ -15,9 +15,15 @@ env:
   - TOXENV=py34-master
 
 matrix:
+  include:
+    - python: 3.5
+      env: TOXENV=py35-1.9
+    - python: 3.5
+      env: TOXENV=py35-master
   allow_failures:
     - env: TOXENV=py27-master
     - env: TOXENV=py34-master
+    - env: TOXENV=py35-master
 
 install:
   - pip install tox coveralls

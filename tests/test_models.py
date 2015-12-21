@@ -3,8 +3,11 @@ from __future__ import unicode_literals
 from django.apps.registry import Apps
 from django.core import checks
 from django.db import models
+from django.test.testcases import SimpleTestCase
 
-from polymodels.models import BasePolymorphicModel
+from polymodels.models import (
+    EMPTY_ACCESSOR, BasePolymorphicModel, SubclassAccessors,
+)
 
 from .base import TestCase
 from .models import Animal, BigSnake, HugeSnake, Mammal, Snake
@@ -101,3 +104,25 @@ class BasePolymorphicModelTest(TestCase):
                 anaconda_snake.type_cast(HugeSnake), HugeSnake,
                 'Two level proxy type casting should work'
             )
+
+
+class SubclassAccessorsTests(SimpleTestCase):
+    def test_dynamic_model_creation_cache_busting(self):
+        test_apps = Apps(['tests'])
+
+        class Base(models.Model):
+            class Meta:
+                apps = test_apps
+
+            accessors = SubclassAccessors()
+
+        self.assertEqual(Base.accessors, {Base: EMPTY_ACCESSOR})
+
+        class DynamicChild(Base):
+            class Meta:
+                apps = test_apps
+
+        self.assertEqual(Base.accessors, {
+            Base: EMPTY_ACCESSOR,
+            DynamicChild: (('dynamicchild',), None, 'dynamicchild'),
+        })

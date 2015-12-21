@@ -5,32 +5,47 @@ from django.core import checks
 from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
+from django.db.models.signals import class_prepared
 
 from .compat import get_remote_field, get_remote_model
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
 
-EMPTY_ACCESSOR = ([], None, '')
+EMPTY_ACCESSOR = ((), None, '')
 
 
 class SubclassAccessors(object):
+    def __init__(self):
+        self.cache = {}
+        self.model = None
+        self.name = None
+
     def contribute_to_class(self, model, name, **kwargs):
         self.model = model
         self.name = name
         setattr(model, name, self)
+        # Ideally we would connect to the model.apps.clear_cache()
+        class_prepared.connect(self.class_prepared_receiver, weak=False)
+
+    def get_cache_key(self, opts):
+        return opts.app_label, opts.model_name
+
+    def class_prepared_receiver(self, sender, **kwargs):
+        if issubclass(sender, self.model):
+            for parent in sender._meta.parents:
+                self.cache.pop(self.get_cache_key(parent._meta), None)
 
     def cache_accessors(self, model):
-        accessors = {}
-        setattr(model, self.name, accessors)
         parents = [model]
         opts = model._meta
+        accessors = self.cache.setdefault(self.get_cache_key(opts), {})
         proxy = model if opts.proxy else None
         parts = []
         while parents:
             parent = parents.pop(0)
             if issubclass(parent, self.model):
                 parent_opts = parent._meta
-                parent_accessors = getattr(parent, self.name)
+                parent_accessors = self.cache.setdefault(self.get_cache_key(parent_opts), {})
                 parent_accessors[model] = (tuple(parts), proxy, LOOKUP_SEP.join(parts))
                 if parent_opts.proxy:
                     parents.insert(0, parent_opts.proxy_for_model)
@@ -40,10 +55,15 @@ class SubclassAccessors(object):
         return accessors
 
     def __get__(self, instance, owner):
-        for model in owner._meta.apps.get_models():
-            if issubclass(model, owner):
-                self.cache_accessors(model)
-        return getattr(owner, self.name)
+        opts = owner._meta
+        cache_key = self.get_cache_key(opts)
+        try:
+            return self.cache[cache_key]
+        except KeyError:
+            for model in opts.apps.get_models():
+                if issubclass(model, owner):
+                    self.cache_accessors(model)
+        return self.cache_accessors(owner)
 
 
 class BasePolymorphicModel(models.Model):

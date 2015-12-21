@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.db import models
+from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 
 from .compat import get_remote_field, get_remote_model
@@ -12,15 +13,50 @@ from .utils import copy_fields, get_content_type, get_content_types
 EMPTY_ACCESSOR = ([], None, '')
 
 
+class SubclassAccessors(object):
+    def contribute_to_class(self, model, name, **kwargs):
+        self.model = model
+        self.name = name
+        setattr(model, name, self)
+
+    def cache_accessors(self, model):
+        accessors = {}
+        setattr(model, self.name, accessors)
+        parents = [model]
+        opts = model._meta
+        proxy = model if opts.proxy else None
+        parts = []
+        while parents:
+            parent = parents.pop(0)
+            if issubclass(parent, self.model):
+                parent_opts = parent._meta
+                parent_accessors = getattr(parent, self.name)
+                parent_accessors[model] = (tuple(parts), proxy, LOOKUP_SEP.join(parts))
+                if parent_opts.proxy:
+                    parents.insert(0, parent_opts.proxy_for_model)
+                else:
+                    parts.insert(0, parent_opts.model_name)
+                    parents = list(parent_opts.parents) + parents
+        return accessors
+
+    def __get__(self, instance, owner):
+        for model in owner._meta.apps.get_models():
+            if issubclass(model, owner):
+                self.cache_accessors(model)
+        return getattr(owner, self.name)
+
+
 class BasePolymorphicModel(models.Model):
     class Meta:
         abstract = True
+
+    subclass_accessors = SubclassAccessors()
 
     def type_cast(self, to=None):
         if to is None:
             content_type_id = getattr(self, "%s_id" % self.CONTENT_TYPE_FIELD)
             to = ContentType.objects.get_for_id(content_type_id).model_class()
-        attrs, proxy, _lookup = self._meta._subclass_accessors.get(to, EMPTY_ACCESSOR)
+        attrs, proxy, _lookup = self.subclass_accessors.get(to, EMPTY_ACCESSOR)
         # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
         type_casted = self
@@ -50,8 +86,7 @@ class BasePolymorphicModel(models.Model):
     @classmethod
     def subclasses_lookup(cls, query_name=None):
         return cls.content_type_lookup(
-            cls, *tuple(cls._meta._subclass_accessors.keys()),
-            query_name=query_name
+            cls, *tuple(cls.subclass_accessors), query_name=query_name
         )
 
     @classmethod

@@ -8,8 +8,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
     def select_subclasses(self, *models):
         self.type_cast = True
         relateds = set()
-        opts = self.model._meta
-        accessors = opts._subclass_accessors
+        accessors = self.model.subclass_accessors
         if models:
             subclasses = set()
             for model in models:
@@ -17,7 +16,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
                     raise TypeError(
                         "%r is not a subclass of %r" % (model, self.model)
                     )
-                subclasses.update(model._meta._subclass_accessors.keys())
+                subclasses.update(model.subclass_accessors)
             # Collect all `select_related` required lookups
             for subclass in subclasses:
                 # Avoid collecting ourself and proxy subclasses

@@ -26,7 +26,7 @@ matrix:
     - env: TOXENV=py35-master
 
 install:
-  - pip install tox coveralls
+  - pip install tox coveralls "virtualenv<14.0"
 
 script:
   - tox

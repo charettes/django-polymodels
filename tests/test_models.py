@@ -105,6 +105,13 @@ class BasePolymorphicModelTest(TestCase):
                 'Two level proxy type casting should work'
             )
 
+    def test_type_cast_on_child_class(self):
+        mammal = Mammal.objects.create()
+        snake = Snake.objects.create(length=1)
+
+        self.assertEqual(mammal.type_cast(), mammal)
+        self.assertEqual(snake.animal_ptr.type_cast(), snake)
+
 
 class SubclassAccessorsTests(SimpleTestCase):
     def test_dynamic_model_creation_cache_busting(self):

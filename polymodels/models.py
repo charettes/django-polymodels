@@ -60,6 +60,10 @@ class SubclassAccessors(object):
         try:
             return self.cache[cache_key]
         except KeyError:
+            for o in owner.mro():
+                if issubclass(o, PolymorphicModel) and o is o._meta.get_field(o.CONTENT_TYPE_FIELD).model:
+                    owner = o
+                    break
             for model in opts.apps.get_models():
                 if issubclass(model, owner):
                     self.cache_accessors(model)

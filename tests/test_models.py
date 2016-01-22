@@ -130,3 +130,19 @@ class SubclassAccessorsTests(SimpleTestCase):
         self.assertEqual(DynamicChild.accessors, {
             DynamicChild: EMPTY_ACCESSOR,
         })
+
+    def test_key_error(self):
+        test_apps = Apps(['tests'])
+
+        class Base(models.Model):
+            class Meta:
+                apps = test_apps
+
+            accessors = SubclassAccessors()
+
+        class Other(models.Model):
+            class Meta:
+                apps = test_apps
+
+        with self.assertRaises(KeyError):
+            Base.accessors['tests', 'other']

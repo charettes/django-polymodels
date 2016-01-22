@@ -37,6 +37,8 @@ class SubclassAccessors(defaultdict):
         return opts.app_label, opts.model_name
 
     def __get__(self, instance, owner):
+        if owner is self.model:
+            return self
         opts = owner._meta
         model_key = self.get_model_key(opts)
         return self[model_key]

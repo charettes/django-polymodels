@@ -116,13 +116,17 @@ class SubclassAccessorsTests(SimpleTestCase):
 
             accessors = SubclassAccessors()
 
-        self.assertEqual(Base.accessors, {Base: EMPTY_ACCESSOR})
+        self.assertEqual(Base.accessors['tests', 'base'], {Base: EMPTY_ACCESSOR})
 
         class DynamicChild(Base):
             class Meta:
                 apps = test_apps
 
-        self.assertEqual(Base.accessors, {
+        self.assertEqual(Base.accessors['tests', 'base'], {
             Base: EMPTY_ACCESSOR,
             DynamicChild: (('dynamicchild',), None, 'dynamicchild'),
+        })
+
+        self.assertEqual(DynamicChild.accessors, {
+            DynamicChild: EMPTY_ACCESSOR,
         })

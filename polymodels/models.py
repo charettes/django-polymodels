@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 
+from collections import defaultdict
+
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.db import models
@@ -14,56 +16,49 @@ from .utils import copy_fields, get_content_type, get_content_types
 EMPTY_ACCESSOR = ((), None, '')
 
 
-class SubclassAccessors(object):
+class SubclassAccessors(defaultdict):
     def __init__(self):
-        self.cache = {}
         self.model = None
-        self.name = None
+        self.apps = None
 
     def contribute_to_class(self, model, name, **kwargs):
         self.model = model
-        self.name = name
+        self.apps = model._meta.apps
         setattr(model, name, self)
         # Ideally we would connect to the model.apps.clear_cache()
         class_prepared.connect(self.class_prepared_receiver, weak=False)
 
-    def get_cache_key(self, opts):
-        return opts.app_label, opts.model_name
-
     def class_prepared_receiver(self, sender, **kwargs):
         if issubclass(sender, self.model):
             for parent in sender._meta.parents:
-                self.cache.pop(self.get_cache_key(parent._meta), None)
+                self.pop(self.get_model_key(parent._meta), None)
 
-    def cache_accessors(self, model):
-        parents = [model]
-        opts = model._meta
-        accessors = self.cache.setdefault(self.get_cache_key(opts), {})
-        proxy = model if opts.proxy else None
-        parts = []
-        while parents:
-            parent = parents.pop(0)
-            if issubclass(parent, self.model):
-                parent_opts = parent._meta
-                parent_accessors = self.cache.setdefault(self.get_cache_key(parent_opts), {})
-                parent_accessors[model] = (tuple(parts), proxy, LOOKUP_SEP.join(parts))
-                if parent_opts.proxy:
-                    parents.insert(0, parent_opts.proxy_for_model)
-                else:
-                    parts.insert(0, parent_opts.model_name)
-                    parents = list(parent_opts.parents) + parents
-        return accessors
+    def get_model_key(self, opts):
+        return opts.app_label, opts.model_name
 
     def __get__(self, instance, owner):
         opts = owner._meta
-        cache_key = self.get_cache_key(opts)
-        try:
-            return self.cache[cache_key]
-        except KeyError:
-            for model in opts.apps.get_models():
-                if issubclass(model, owner):
-                    self.cache_accessors(model)
-        return self.cache_accessors(owner)
+        model_key = self.get_model_key(opts)
+        return self[model_key]
+
+    def __missing__(self, model_key):
+        """
+        Generate the accessors for this model by recursively generating its
+        children accessors and prefixing them.
+        """
+        owner = self.apps.get_model(*model_key)
+        if not issubclass(owner, self.model):
+            raise KeyError
+        accessors = {owner: EMPTY_ACCESSOR}
+        for model in self.apps.get_models():
+            opts = model._meta
+            if opts.proxy and issubclass(model, owner):
+                accessors[model] = ((), model, '')
+            elif owner in opts.parents:
+                part = opts.model_name
+                for child, (parts, proxy, _lookup) in self[self.get_model_key(opts)].items():
+                    accessors[child] = ((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))
+        return accessors
 
 
 class BasePolymorphicModel(models.Model):
@@ -76,7 +71,7 @@ class BasePolymorphicModel(models.Model):
         if to is None:
             content_type_id = getattr(self, "%s_id" % self.CONTENT_TYPE_FIELD)
             to = ContentType.objects.get_for_id(content_type_id).model_class()
-        attrs, proxy, _lookup = self.subclass_accessors.get(to, EMPTY_ACCESSOR)
+        attrs, proxy, _lookup = self.subclass_accessors[to]
         # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
         type_casted = self

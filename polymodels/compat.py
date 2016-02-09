@@ -16,6 +16,18 @@ else:
     def get_remote_model(remote_field):
         return remote_field.to
 
+# TODO: Remove the following when support for Django 1.8 is dropped
+try:
+    from django.db.models.query import ModelIterable
+except ImportError:
+    def is_model_iterable(queryset):
+        return True
+else:
+    def is_model_iterable(queryset):
+        return issubclass(queryset._iterable_class, ModelIterable)
+
+
+# TODO: Remove the following when support for Django 1.9 is dropped
 try:
     from django.db.models.fields.related import lazy_related_operation
 except ImportError:

@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 
+from .compat import is_model_iterable
+
 
 class PolymorphicQuerySet(models.query.QuerySet):
     def select_subclasses(self, *models):
@@ -47,13 +49,11 @@ class PolymorphicQuerySet(models.query.QuerySet):
 
     def iterator(self):
         iterator = super(PolymorphicQuerySet, self).iterator()
-        if getattr(self, 'type_cast', False):
-            for obj in iterator:
-                yield obj.type_cast()
-        else:
-            # yield from iterator
-            for obj in iterator:
-                yield obj
+        if is_model_iterable(self) and getattr(self, 'type_cast', False):
+            iterator = (obj.type_cast() for obj in iterator)
+        # yield from iterator
+        for obj in iterator:
+            yield obj
 
 
 class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):

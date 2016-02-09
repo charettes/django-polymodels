@@ -69,6 +69,12 @@ class PolymorphicQuerySetTest(TestCase):
                                      ['<BigSnake: big snake>',
                                       '<HugeSnake: huge snake>'])
 
+    def test_select_subclasses_values(self):
+        Animal.objects.create(name='animal')
+        self.assertQuerysetEqual(
+            Animal.objects.select_subclasses().values_list('name', flat=True), ['animal'], lambda x: x
+        )
+
     def test_exclude_subclasses(self):
         Animal.objects.create(name='animal')
         Mammal.objects.create(name='first mammal')

@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 
+import threading
 from collections import defaultdict
 
 from django.contrib.contenttypes.models import ContentType
@@ -24,14 +25,16 @@ class SubclassAccessors(defaultdict):
     def contribute_to_class(self, model, name, **kwargs):
         self.model = model
         self.apps = model._meta.apps
+        self.lock = threading.RLock()
         setattr(model, name, self)
         # Ideally we would connect to the model.apps.clear_cache()
         class_prepared.connect(self.class_prepared_receiver, weak=False)
 
     def class_prepared_receiver(self, sender, **kwargs):
         if issubclass(sender, self.model):
-            for parent in sender._meta.parents:
-                self.pop(self.get_model_key(parent._meta), None)
+            with self.lock:
+                for parent in sender._meta.parents:
+                    self.pop(self.get_model_key(parent._meta), None)
 
     def get_model_key(self, opts):
         return opts.app_label, opts.model_name
@@ -52,14 +55,15 @@ class SubclassAccessors(defaultdict):
         if not issubclass(owner, self.model):
             raise KeyError
         accessors = {owner: EMPTY_ACCESSOR}
-        for model in self.apps.get_models():
-            opts = model._meta
-            if opts.proxy and issubclass(model, owner):
-                accessors[model] = ((), model, '')
-            elif owner in opts.parents:
-                part = opts.model_name
-                for child, (parts, proxy, _lookup) in self[self.get_model_key(opts)].items():
-                    accessors[child] = ((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))
+        with self.lock:
+            for model in self.apps.get_models():
+                opts = model._meta
+                if opts.proxy and issubclass(model, owner):
+                    accessors[model] = ((), model, '')
+                elif owner in opts.parents:
+                    part = opts.model_name
+                    for child, (parts, proxy, _lookup) in self[self.get_model_key(opts)].items():
+                        accessors[child] = ((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))
         return accessors
 
 

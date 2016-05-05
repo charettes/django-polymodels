@@ -5,7 +5,7 @@ from inspect import isclass
 from django import forms
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q, ForeignKey
+from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.related import ManyToOneRel, RelatedField
 from django.utils.deconstruct import deconstructible

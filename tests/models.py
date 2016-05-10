@@ -66,6 +66,8 @@ class Reptile(Animal):
 
 
 class Snake(Reptile):
+    color = models.CharField(max_length=100, blank=True)
+
     class Meta:
         app_label = 'polymodels'
         ordering = ['id']

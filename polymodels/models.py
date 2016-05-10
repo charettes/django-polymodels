@@ -58,9 +58,11 @@ class SubclassAccessors(defaultdict):
         with self.lock:
             for model in self.apps.get_models():
                 opts = model._meta
-                if opts.proxy and issubclass(model, owner):
+                if opts.proxy and issubclass(model, owner) and (owner._meta.proxy or opts.concrete_model is owner):
                     accessors[model] = ((), model, '')
-                elif owner in opts.parents:
+                # Use .get() instead of `in` as proxy inheritance is also
+                # stored in _meta.parents as None.
+                elif opts.parents.get(owner):
                     part = opts.model_name
                     for child, (parts, proxy, _lookup) in self[self.get_model_key(opts)].items():
                         accessors[child] = ((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))

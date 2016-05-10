@@ -91,7 +91,7 @@ class BasePolymorphicModelTest(TestCase):
             animal_dog.type_cast(Mammal)
 
         # That's a big snake
-        anaconda_snake = Snake.objects.create(name='anaconda', length=152)
+        anaconda_snake = Snake.objects.create(name='anaconda', length=152, color='green')
 
         with self.assertNumQueries(0):
             self.assertIsInstance(
@@ -104,6 +104,13 @@ class BasePolymorphicModelTest(TestCase):
                 anaconda_snake.type_cast(HugeSnake), HugeSnake,
                 'Two level proxy type casting should work'
             )
+
+        for subclass in [Snake, BigSnake, HugeSnake]:
+            anaconda_animal = Animal.objects.get(pk=anaconda_snake.pk)
+            with self.assertNumQueries(1):
+                anaconda_animal_type_casted = anaconda_animal.type_cast(subclass)
+            self.assertIsInstance(anaconda_animal_type_casted, subclass)
+            self.assertEqual(anaconda_animal_type_casted.color, 'green')
 
 
 class SubclassAccessorsTests(SimpleTestCase):
@@ -146,3 +153,43 @@ class SubclassAccessorsTests(SimpleTestCase):
 
         with self.assertRaises(KeyError):
             Base.accessors['tests', 'other']
+
+    def test_proxy_accessors(self):
+        test_apps = Apps(['tests'])
+
+        class Base(models.Model):
+            class Meta:
+                apps = test_apps
+                abstract = True
+
+            accessors = SubclassAccessors()
+
+        class Polymorphic(Base):
+            class Meta:
+                apps = test_apps
+                abstract = True
+
+        class Root(Polymorphic):
+            class Meta:
+                apps = test_apps
+
+        class Subclass(Root):
+            class Meta:
+                apps = test_apps
+
+        class SubclassProxy(Subclass):
+            class Meta:
+                apps = test_apps
+                proxy = True
+
+        class SubclassProxyProxy(SubclassProxy):
+            class Meta:
+                apps = test_apps
+                proxy = True
+
+        self.assertEqual(Root.accessors[Subclass], (('subclass',), None, 'subclass'))
+        self.assertEqual(Root.accessors[SubclassProxy], (('subclass',), SubclassProxy, 'subclass'))
+        self.assertEqual(Root.accessors[SubclassProxyProxy], (('subclass',), SubclassProxyProxy, 'subclass'))
+        self.assertEqual(Subclass.accessors[SubclassProxy], ((), SubclassProxy, ''))
+        self.assertEqual(Subclass.accessors[SubclassProxyProxy], ((), SubclassProxyProxy, ''))
+        self.assertEqual(SubclassProxy.accessors[SubclassProxyProxy], ((), SubclassProxyProxy, ''))

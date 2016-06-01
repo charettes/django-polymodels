@@ -143,6 +143,7 @@ class PolymorphicTypeField(ForeignKey):
         return super(RelatedField, self).formfield(**defaults)
 
     def deconstruct(self):
-        name, _, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
-        path = 'django.db.models.fields.related.ForeignKey'
+        name, path, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
+        opts = getattr(self.polymorphic_type, '_meta', None)
+        kwargs['polymorphic_type'] = "%s.%s" % (opts.app_label, opts.object_name) if opts else self.polymorphic_type
         return name, path, args, kwargs

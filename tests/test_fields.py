@@ -150,6 +150,7 @@ class PolymorphicTypeFieldTests(TestCase):
 
     def assertDeconstructionEqual(self, field, deconstructed):
         self.assertEqual(field.deconstruct(), deconstructed)
+        self.assertEqual(field.clone().deconstruct()[1:], deconstructed[1:])
         self.assertEqual(self.serialize_round_trip(deconstructed), deconstructed)
 
     def test_field_deconstruction(self):
@@ -179,28 +180,32 @@ class PolymorphicTypeFieldTests(TestCase):
             return deconstruction
 
         self.assertDeconstructionEqual(Foo._meta.get_field('foo'), (
-            'foo', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
+            'foo', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+                'polymorphic_type': 'polymodels.Foo',
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'default': ContentTypeReference('polymodels', 'foo'),
             })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo'), (
-            'foo', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
+            'foo', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+                'polymorphic_type': 'polymodels.Foo',
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'default': ContentTypeReference('polymodels', 'foo'),
             })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_null'), (
-            'foo_null', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
+            'foo_null', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+                'polymorphic_type': 'polymodels.Foo',
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'null': True,
             })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_default'), (
-            'foo_default', 'django.db.models.fields.related.ForeignKey', [], django_version_agnostic({
+            'foo_default', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+                'polymorphic_type': 'polymodels.Foo',
                 'to': 'contenttypes.ContentType',
                 'related_name': '+',
                 'default': get_content_type(Foo).pk,

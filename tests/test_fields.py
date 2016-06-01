@@ -43,40 +43,23 @@ class PolymorphicTypeFieldTests(TestCase):
         """
         Make sure existing `limit_choices_to` are taken into consideration
         """
-        type_field = Trait._meta.get_field('trait_type')
-        remote_field = get_remote_field(type_field)
-
-        # Make sure it's cached
-        limit_choices_to = remote_field.limit_choices_to
-        self.assertIn('limit_choices_to', remote_field.__dict__)
-
-        extra_limit_choices_to = {'app_label': 'polymodels'}
-
-        # Make sure it works with existing dict `limit_choices_to`
-        remote_field.limit_choices_to = extra_limit_choices_to
-        # Cache should be cleared
-        self.assertNotIn('limit_choices_to', remote_field.__dict__)
+        field = PolymorphicTypeField(Trait, on_delete=models.CASCADE)
+        remote_field = get_remote_field(field)
+        subclasses_lookup = Trait.subclasses_lookup('pk')
+        self.assertEqual(remote_field.limit_choices_to(), subclasses_lookup)
+        # Test dict() limit_choices_to.
+        limit_choices_to = {'app_label': 'polymodels'}
+        field = PolymorphicTypeField(Trait, on_delete=models.CASCADE, limit_choices_to=limit_choices_to)
+        remote_field = get_remote_field(field)
         self.assertEqual(
-            remote_field.limit_choices_to,
-            dict(extra_limit_choices_to, **limit_choices_to)
+            remote_field.limit_choices_to(), dict(subclasses_lookup, **limit_choices_to)
         )
-
-        # Make sure it works with existing Q `limit_choices_to`
-        remote_field.limit_choices_to = Q(**extra_limit_choices_to)
-        # Cache should be cleared
-        self.assertNotIn('limit_choices_to', remote_field.__dict__)
-        remote_field_limit_choices_to = remote_field.limit_choices_to
-        self.assertEqual(remote_field_limit_choices_to.connector, Q.AND)
-        self.assertFalse(remote_field_limit_choices_to.negated)
+        # Test Q() limit_choices_to.
+        field = PolymorphicTypeField(Trait, on_delete=models.CASCADE, limit_choices_to=Q(**limit_choices_to))
+        remote_field = get_remote_field(field)
         self.assertEqual(
-            remote_field_limit_choices_to.children,
-            list(extra_limit_choices_to.items()) + list(limit_choices_to.items())
+            str(remote_field.limit_choices_to()), str(Q(**limit_choices_to) & Q(**subclasses_lookup))
         )
-
-        # Re-assign the original value
-        remote_field.limit_choices_to = None
-        # Cache should be cleared
-        self.assertNotIn('limit_choices_to', remote_field.__dict__)
 
     def test_invalid_type(self):
         trait = Trait.objects.create()

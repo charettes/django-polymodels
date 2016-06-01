@@ -105,14 +105,25 @@ class PolymorphicTypeFieldTests(TestCase):
             class Meta:
                 apps = test_apps
 
-        self.assertEqual(CheckModel._meta.get_field('valid').check(), [])
-        self.assertEqual(CheckModel._meta.get_field('unresolved').check(), [
+        def assert_checks_equal(field, errors):
+            # TODO: Remove when dropping support for Django 1.8.
+            if django.VERSION < (1, 9):
+                errors.insert(0, checks.Error(
+                    "Field defines a relation with model 'ContentType', "
+                    "which is either not installed, or is abstract.",
+                    id='fields.E300',
+                    obj=field,
+                ))
+            self.assertEqual(field.check(), errors)
+
+        assert_checks_equal(CheckModel._meta.get_field('valid'), [])
+        assert_checks_equal(CheckModel._meta.get_field('unresolved'), [
             checks.Error(
                 "Field defines a relation with model 'unresolved', which is either not installed, or is abstract.",
                 id='fields.E300',
             ),
         ])
-        self.assertEqual(CheckModel._meta.get_field('non_polymorphic_base').check(), [
+        assert_checks_equal(CheckModel._meta.get_field('non_polymorphic_base'), [
             checks.Error(
                 "The ContentType type is not a subclass of BasePolymorphicModel.",
                 id='polymodels.E004',
@@ -182,32 +193,22 @@ class PolymorphicTypeFieldTests(TestCase):
         self.assertDeconstructionEqual(Foo._meta.get_field('foo'), (
             'foo', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
                 'polymorphic_type': 'polymodels.Foo',
-                'to': 'contenttypes.ContentType',
-                'related_name': '+',
-                'default': ContentTypeReference('polymodels', 'foo'),
             })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo'), (
             'foo', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
                 'polymorphic_type': 'polymodels.Foo',
-                'to': 'contenttypes.ContentType',
-                'related_name': '+',
-                'default': ContentTypeReference('polymodels', 'foo'),
             })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_null'), (
             'foo_null', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
                 'polymorphic_type': 'polymodels.Foo',
-                'to': 'contenttypes.ContentType',
-                'related_name': '+',
                 'null': True,
             })
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_default'), (
             'foo_default', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
                 'polymorphic_type': 'polymodels.Foo',
-                'to': 'contenttypes.ContentType',
-                'related_name': '+',
                 'default': get_content_type(Foo).pk,
             })
         ))

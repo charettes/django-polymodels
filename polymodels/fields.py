@@ -2,7 +2,6 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.apps import apps
-from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
@@ -78,17 +77,18 @@ class PolymorphicTypeField(ForeignKey):
     description = _(
         'Content type of a subclass of %(type)s'
     )
+    default_kwargs = {
+        'to': 'contenttypes.ContentType',
+        'related_name': '+',
+    }
 
     def __init__(self, polymorphic_type, *args, **kwargs):
         self.polymorphic_type = polymorphic_type
-        limit_choices_to = LimitChoicesToSubclasses(self, kwargs.pop('limit_choices_to', None))
-        defaults = {
-            'to': ContentType,
-            'related_name': '+',
-            'limit_choices_to': limit_choices_to,
-        }
-        defaults.update(**kwargs)
-        super(PolymorphicTypeField, self).__init__(*args, **defaults)
+        self.overriden_default = False
+        for kwarg, value in self.default_kwargs.items():
+            kwargs.setdefault(kwarg, value)
+        kwargs['limit_choices_to'] = LimitChoicesToSubclasses(self, kwargs.pop('limit_choices_to', None))
+        super(PolymorphicTypeField, self).__init__(*args, **kwargs)
 
     def contribute_to_class(self, cls, name):
         super(PolymorphicTypeField, self).contribute_to_class(cls, name)
@@ -105,6 +105,7 @@ class PolymorphicTypeField(ForeignKey):
         if self.default is NOT_PROVIDED and not self.null:
             opts = polymorphic_type._meta
             self.default = ContentTypeReference(opts.app_label, opts.model_name)
+            self.overriden_default = True
         self.polymorphic_type = polymorphic_type
         self.type = polymorphic_type.__name__
         self.error_messages['invalid'] = (
@@ -146,4 +147,9 @@ class PolymorphicTypeField(ForeignKey):
         name, path, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
         opts = getattr(self.polymorphic_type, '_meta', None)
         kwargs['polymorphic_type'] = "%s.%s" % (opts.app_label, opts.object_name) if opts else self.polymorphic_type
+        for kwarg, value in list(kwargs.items()):
+            if self.default_kwargs.get(kwarg) == value:
+                kwargs.pop(kwarg)
+        if self.overriden_default:
+            kwargs.pop('default')
         return name, path, args, kwargs

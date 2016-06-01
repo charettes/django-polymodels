@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import django
 from django.apps.registry import Apps
+from django.core import checks
 from django.core.exceptions import ValidationError
 from django.db import models
 from django.db.migrations.writer import MigrationWriter
@@ -88,15 +89,35 @@ class PolymorphicTypeFieldTests(TestCase):
             'Content type of a subclass of Trait'
         )
 
-    def test_invalid_polymorphic_model(self):
-        with self.assertRaisesMessage(
-            AssertionError, "First parameter to `PolymorphicTypeField` must be a subclass of `BasePolymorphicModel`"
-        ):
-            PolymorphicTypeField(None)
-        with self.assertRaisesMessage(
-            AssertionError, "First parameter to `PolymorphicTypeField` must be a subclass of `BasePolymorphicModel`"
-        ):
-            PolymorphicTypeField(models.Model)
+    def test_checks(self):
+        test_apps = Apps(['tests', 'django.contrib.contenttypes'])
+
+        class ContentType(models.Model):
+            class Meta:
+                apps = test_apps
+                app_label = 'contenttypes'
+
+        class CheckModel(PolymorphicModel):
+            valid = PolymorphicTypeField('self', on_delete=models.CASCADE)
+            unresolved = PolymorphicTypeField('unresolved', on_delete=models.CASCADE)
+            non_polymorphic_base = PolymorphicTypeField('contenttypes.ContentType', on_delete=models.CASCADE)
+
+            class Meta:
+                apps = test_apps
+
+        self.assertEqual(CheckModel._meta.get_field('valid').check(), [])
+        self.assertEqual(CheckModel._meta.get_field('unresolved').check(), [
+            checks.Error(
+                "Field defines a relation with model 'unresolved', which is either not installed, or is abstract.",
+                id='fields.E300',
+            ),
+        ])
+        self.assertEqual(CheckModel._meta.get_field('non_polymorphic_base').check(), [
+            checks.Error(
+                "The ContentType type is not a subclass of BasePolymorphicModel.",
+                id='polymodels.E004',
+            ),
+        ])
 
     def test_formfield_issues_no_queries(self):
         trait_type = Trait._meta.get_field('trait_type')

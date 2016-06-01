@@ -1,10 +1,9 @@
 from __future__ import unicode_literals
 
-from inspect import isclass
-
 from django import forms
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
+from django.core import checks
 from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
 from django.db.models.fields.related import RelatedField
@@ -81,8 +80,6 @@ class PolymorphicTypeField(ForeignKey):
     )
 
     def __init__(self, polymorphic_type, *args, **kwargs):
-        if not isinstance(polymorphic_type, string_types):
-            self.validate_polymorphic_type(polymorphic_type)
         self.polymorphic_type = polymorphic_type
         limit_choices_to = LimitChoicesToSubclasses(self, kwargs.pop('limit_choices_to', None))
         defaults = {
@@ -93,20 +90,12 @@ class PolymorphicTypeField(ForeignKey):
         defaults.update(**kwargs)
         super(PolymorphicTypeField, self).__init__(*args, **defaults)
 
-    def validate_polymorphic_type(self, model):
-        if not isclass(model) or not issubclass(model, BasePolymorphicModel):
-            raise AssertionError(
-                "First parameter to `PolymorphicTypeField` must be "
-                "a subclass of `BasePolymorphicModel`"
-            )
-
     def contribute_to_class(self, cls, name):
         super(PolymorphicTypeField, self).contribute_to_class(cls, name)
         polymorphic_type = self.polymorphic_type
         if (isinstance(polymorphic_type, string_types) or
                 polymorphic_type._meta.pk is None):
             def resolve_polymorphic_type(model, related_model, field):
-                field.validate_polymorphic_type(related_model)
                 field.do_polymorphic_type(related_model)
             lazy_related_operation(resolve_polymorphic_type, cls, polymorphic_type, field=self)
         else:
@@ -121,6 +110,21 @@ class PolymorphicTypeField(ForeignKey):
         self.error_messages['invalid'] = (
             'Specified content type is not of a subclass of %s.' % polymorphic_type._meta.object_name
         )
+
+    def check(self, **kwargs):
+        errors = super(PolymorphicTypeField, self).check(**kwargs)
+        if isinstance(self.polymorphic_type, string_types):
+            errors.append(checks.Error(
+                ("Field defines a relation with model '%s', which "
+                 "is either not installed, or is abstract.") % self.polymorphic_type,
+                id='fields.E300',
+            ))
+        elif not issubclass(self.polymorphic_type, BasePolymorphicModel):
+            errors.append(checks.Error(
+                "The %s type is not a subclass of BasePolymorphicModel." % self.polymorphic_type.__name__,
+                id='polymodels.E004',
+            ))
+        return errors
 
     def formfield(self, **kwargs):
         db = kwargs.pop('using', None)

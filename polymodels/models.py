@@ -91,7 +91,7 @@ class BasePolymorphicModel(models.Model):
         return type_casted
 
     def save(self, *args, **kwargs):
-        if self.pk is None:
+        if self._state.adding and getattr(self, self.CONTENT_TYPE_FIELD, None) is None:
             content_type = get_content_type(self.__class__)
             setattr(self, self.CONTENT_TYPE_FIELD, content_type)
         return super(BasePolymorphicModel, self).save(*args, **kwargs)

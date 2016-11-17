@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 
 from django.apps.registry import Apps
+from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.db import models
 from django.test.testcases import SimpleTestCase
@@ -111,6 +112,33 @@ class BasePolymorphicModelTest(TestCase):
                 anaconda_animal_type_casted = anaconda_animal.type_cast(subclass)
             self.assertIsInstance(anaconda_animal_type_casted, subclass)
             self.assertEqual(anaconda_animal_type_casted.color, 'green')
+
+    def test_content_type_saving(self):
+        # Creating a base class should assign the correct content_type.
+        animal_content_type = ContentType.objects.get_for_model(Animal)
+        with self.assertNumQueries(1):
+            animal = Animal.objects.create(name='dog')
+        self.assertEqual(animal.content_type, animal_content_type)
+
+        # Creating subclass should assign the correct content_type.
+        mammal_content_type = ContentType.objects.get_for_model(Mammal)
+        with self.assertNumQueries(2):
+            mammal = Mammal.objects.create(name='cat')
+        self.assertEqual(mammal.content_type, mammal_content_type)
+
+        # Updating a subclass's base class pointer should preserve content_type.
+        mammal.animal_ptr.save()
+        self.assertEqual(mammal.animal_ptr.content_type, mammal_content_type)
+        self.assertEqual(mammal.content_type, mammal_content_type)
+
+        # Creating a base class should honor explicit content_type.
+        with self.assertNumQueries(1):
+            explicit_mammal = Animal.objects.create(name='beaver', content_type=mammal_content_type)
+        self.assertEqual(explicit_mammal.content_type, mammal_content_type)
+        with self.assertNumQueries(2):
+            beaver = Mammal.objects.create(animal_ptr=explicit_mammal)
+        self.assertEqual(explicit_mammal.content_type, mammal_content_type)
+        self.assertEqual(beaver.content_type, mammal_content_type)
 
 
 class SubclassAccessorsTests(SimpleTestCase):

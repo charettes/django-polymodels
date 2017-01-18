@@ -32,6 +32,14 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<Snake: snake>',
                                       '<BigSnake: big snake>',
                                       '<HugeSnake: huge snake>'])
+        with self.assertNumQueries(1):
+            self.assertQuerysetEqual(animals.iterator(),
+                                     ['<Animal: animal>',
+                                      '<Mammal: mammal>',
+                                      '<Monkey: monkey>',
+                                      '<Snake: snake>',
+                                      '<BigSnake: big snake>',
+                                      '<HugeSnake: huge snake>'])
         # Filter out non-mammal (direct subclass)
         animal_mammals = Animal.objects.select_subclasses(Mammal)
         animal_mammals_expected_query_select_related = {

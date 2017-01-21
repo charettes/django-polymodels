@@ -77,6 +77,10 @@ class PolymorphicQuerySetTest(TestCase):
                                      ['<BigSnake: big snake>',
                                       '<HugeSnake: huge snake>'])
 
+    def test_select_subclasses_get(self):
+        snake = Snake.objects.create(name='snake', length=10)
+        self.assertEqual(Animal.objects.select_subclasses().get(), snake)
+
     def test_select_subclasses_values(self):
         Animal.objects.create(name='animal')
         self.assertQuerysetEqual(

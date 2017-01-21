@@ -77,7 +77,8 @@ class PolymorphicQuerySet(models.query.QuerySet):
 
 
 class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):
-    use_for_related_fields = True
+    if django.VERSION < (1, 10):
+        use_for_related_fields = True
 
     def contribute_to_class(self, model, name):
         # Avoid circular reference

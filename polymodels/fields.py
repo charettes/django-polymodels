@@ -152,4 +152,5 @@ class PolymorphicTypeField(ForeignKey):
                 kwargs.pop(kwarg)
         if self.overriden_default:
             kwargs.pop('default')
+        kwargs.pop('limit_choices_to', None)
         return name, path, args, kwargs

@@ -9,7 +9,6 @@ env:
   - TOXENV=py27-1.9
   - TOXENV=py27-1.10
   - TOXENV=py27-1.11
-  - TOXENV=py32-1.8
   - TOXENV=py33-1.8
   - TOXENV=py34-1.8
   - TOXENV=py34-1.9
@@ -35,7 +34,7 @@ matrix:
     - env: TOXENV=py36-master
 
 install:
-  - pip install tox coveralls "virtualenv<14.0"
+  - pip install tox coveralls
 
 script:
   - tox

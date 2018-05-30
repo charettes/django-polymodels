@@ -1,33 +1,19 @@
 from __future__ import unicode_literals
 
-import django
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
+from django.db.models.query import ModelIterable
 
-from .compat import is_model_iterable
 
-
-try:
-    from django.db.models.query import ModelIterable
-except ImportError:
-    # TODO: Remove when dropping support for Django 1.8.
-    class PolymorphicModelIterable(object):
-        def __init__(self, iterable):
-            self.iterable = iterable
-
-        def __iter__(self):
-            for instance in self.iterable:
-                yield instance.type_cast()
-else:
-    class PolymorphicModelIterable(ModelIterable):
-        def __iter__(self):
-            for instance in super(PolymorphicModelIterable, self).__iter__():
-                yield instance.type_cast()
+class PolymorphicModelIterable(ModelIterable):
+    def __iter__(self):
+        for instance in super(PolymorphicModelIterable, self).__iter__():
+            yield instance.type_cast()
 
 
 class PolymorphicQuerySet(models.query.QuerySet):
     def select_subclasses(self, *models):
-        if is_model_iterable(self):
+        if issubclass(self._iterable_class, ModelIterable):
             self._iterable_class = PolymorphicModelIterable
         relateds = set()
         accessors = self.model.subclass_accessors
@@ -63,23 +49,8 @@ class PolymorphicQuerySet(models.query.QuerySet):
     def exclude_subclasses(self):
         return self.filter(**self.model.content_type_lookup())
 
-    # TODO: Remove when dropping support for Django 1.8.
-    if django.VERSION < (1, 9):
-        def _clone(self, *args, **kwargs):
-            kwargs.update(_iterable_class=getattr(self, '_iterable_class', None))
-            return super(PolymorphicQuerySet, self)._clone(*args, **kwargs)
-
-        def iterator(self):
-            iterator = super(PolymorphicQuerySet, self).iterator()
-            if getattr(self, '_iterable_class', None) is PolymorphicModelIterable:
-                return self._iterable_class(iterator)
-            return iterator
-
 
 class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):
-    if django.VERSION < (1, 10):
-        use_for_related_fields = True
-
     def contribute_to_class(self, model, name):
         # Avoid circular reference
         from .models import BasePolymorphicModel

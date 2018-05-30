@@ -5,13 +5,14 @@ from django.apps import apps
 from django.core import checks
 from django.db.models import ForeignKey, Q
 from django.db.models.fields import NOT_PROVIDED
-from django.db.models.fields.related import RelatedField
+from django.db.models.fields.related import (
+    RelatedField, lazy_related_operation,
+)
 from django.utils.deconstruct import deconstructible
 from django.utils.functional import LazyObject
 from django.utils.six import string_types
 from django.utils.translation import ugettext_lazy as _
 
-from .compat import get_remote_field, get_remote_model, lazy_related_operation
 from .models import BasePolymorphicModel
 from .utils import get_content_type
 
@@ -46,7 +47,7 @@ class LazyPolymorphicTypeQueryset(LazyObject):
     def _setup(self):
         remote_field = self.__dict__.get('remote_field')
         db = self.__dict__.get('db')
-        self._wrapped = get_remote_model(remote_field)._default_manager.using(db).complex_filter(
+        self._wrapped = remote_field.model._default_manager.using(db).complex_filter(
             remote_field.limit_choices_to()
         )
 
@@ -137,8 +138,8 @@ class PolymorphicTypeField(ForeignKey):
             )
         defaults = {
             'form_class': forms.ModelChoiceField,
-            'queryset': LazyPolymorphicTypeQueryset(get_remote_field(self), db),
-            'to_field_name': get_remote_field(self).field_name,
+            'queryset': LazyPolymorphicTypeQueryset(self.remote_field, db),
+            'to_field_name': self.remote_field.field_name,
         }
         defaults.update(kwargs)
         return super(RelatedField, self).formfield(**defaults)

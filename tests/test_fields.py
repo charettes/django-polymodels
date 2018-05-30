@@ -8,7 +8,6 @@ from django.db import models
 from django.db.migrations.writer import MigrationWriter
 from django.db.models.query_utils import Q
 
-from polymodels.compat import get_remote_field
 from polymodels.fields import ContentTypeReference, PolymorphicTypeField
 from polymodels.models import PolymorphicModel
 from polymodels.utils import get_content_type
@@ -45,19 +44,19 @@ class PolymorphicTypeFieldTests(TestCase):
         Make sure existing `limit_choices_to` are taken into consideration
         """
         field = PolymorphicTypeField(Trait, on_delete=models.CASCADE)
-        remote_field = get_remote_field(field)
+        remote_field = field.remote_field
         subclasses_lookup = Trait.subclasses_lookup('pk')
         self.assertEqual(remote_field.limit_choices_to(), subclasses_lookup)
         # Test dict() limit_choices_to.
         limit_choices_to = {'app_label': 'polymodels'}
         field = PolymorphicTypeField(Trait, on_delete=models.CASCADE, limit_choices_to=limit_choices_to)
-        remote_field = get_remote_field(field)
+        remote_field = field.remote_field
         self.assertEqual(
             remote_field.limit_choices_to(), dict(subclasses_lookup, **limit_choices_to)
         )
         # Test Q() limit_choices_to.
         field = PolymorphicTypeField(Trait, on_delete=models.CASCADE, limit_choices_to=Q(**limit_choices_to))
-        remote_field = get_remote_field(field)
+        remote_field = field.remote_field
         self.assertEqual(
             str(remote_field.limit_choices_to()), str(Q(**limit_choices_to) & Q(**subclasses_lookup))
         )
@@ -145,15 +144,15 @@ class PolymorphicTypeFieldTests(TestCase):
             field.formfield()
 
     def safe_exec(self, string, value=None):
-        l = {}
+        scope = {}
         try:
-            exec(string, globals(), l)
+            exec(string, globals(), scope)
         except Exception as e:
             if value:
                 self.fail("Could not exec %r (from value %r): %s" % (string.strip(), value, e))
             else:
                 self.fail("Could not exec %r: %s" % (string.strip(), e))
-        return l
+        return scope
 
     def serialize_round_trip(self, value):
         string, imports = MigrationWriter.serialize(value)

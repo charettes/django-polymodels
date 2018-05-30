@@ -10,7 +10,6 @@ from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 
-from .compat import get_remote_field, get_remote_model
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
 
@@ -136,7 +135,7 @@ class BasePolymorphicModel(models.Model):
                 ))
             else:
                 if (not isinstance(content_type_field, models.ForeignKey) or
-                        get_remote_model(get_remote_field(content_type_field)) is not ContentType):
+                        content_type_field.remote_field.model is not ContentType):
                     errors.append(checks.Error(
                         "`%s` must be a `ForeignKey` to `ContentType`." % content_type_field_name,
                         hint=None,

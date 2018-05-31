@@ -7,7 +7,7 @@ from django.db import models
 from django.test.testcases import SimpleTestCase
 
 from polymodels.models import (
-    EMPTY_ACCESSOR, BasePolymorphicModel, SubclassAccessors,
+    EMPTY_ACCESSOR, BasePolymorphicModel, SubclassAccessor, SubclassAccessors,
 )
 
 from .base import TestCase
@@ -215,9 +215,12 @@ class SubclassAccessorsTests(SimpleTestCase):
                 apps = test_apps
                 proxy = True
 
-        self.assertEqual(Root.accessors[Subclass], (('subclass',), None, 'subclass'))
-        self.assertEqual(Root.accessors[SubclassProxy], (('subclass',), SubclassProxy, 'subclass'))
-        self.assertEqual(Root.accessors[SubclassProxyProxy], (('subclass',), SubclassProxyProxy, 'subclass'))
-        self.assertEqual(Subclass.accessors[SubclassProxy], ((), SubclassProxy, ''))
-        self.assertEqual(Subclass.accessors[SubclassProxyProxy], ((), SubclassProxyProxy, ''))
-        self.assertEqual(SubclassProxy.accessors[SubclassProxyProxy], ((), SubclassProxyProxy, ''))
+        self.assertEqual(Root.accessors[Subclass], SubclassAccessor(('subclass',), None, 'subclass'))
+        self.assertEqual(Root.accessors[SubclassProxy], SubclassAccessor(('subclass',), SubclassProxy, 'subclass'))
+        self.assertEqual(
+            Root.accessors[SubclassProxyProxy],
+            SubclassAccessor(('subclass',), SubclassProxyProxy, 'subclass')
+        )
+        self.assertEqual(Subclass.accessors[SubclassProxy], SubclassAccessor((), SubclassProxy, ''))
+        self.assertEqual(Subclass.accessors[SubclassProxyProxy], SubclassAccessor((), SubclassProxyProxy, ''))
+        self.assertEqual(SubclassProxy.accessors[SubclassProxyProxy], SubclassAccessor((), SubclassProxyProxy, ''))

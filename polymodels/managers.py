@@ -28,7 +28,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
     def select_subclasses(self, *models):
         if issubclass(self._iterable_class, ModelIterable):
             self._iterable_class = PolymorphicModelIterable
-        relateds = set()
+        related_lookups = set()
         accessors = self.model.subclass_accessors
         if models:
             subclasses = set()
@@ -41,9 +41,9 @@ class PolymorphicQuerySet(models.query.QuerySet):
             # Collect all `select_related` required lookups
             for subclass in subclasses:
                 # Avoid collecting ourself and proxy subclasses
-                related = accessors[subclass][2]
-                if related:
-                    relateds.add(related)
+                related_lookup = accessors[subclass].related_lookup
+                if related_lookup:
+                    related_lookups.add(related_lookup)
             queryset = self.filter(
                 **self.model.content_type_lookup(*tuple(subclasses))
             )
@@ -51,12 +51,12 @@ class PolymorphicQuerySet(models.query.QuerySet):
             # Collect all `select_related` required relateds
             for accessor in accessors.values():
                 # Avoid collecting ourself and proxy subclasses
-                related = accessor[2]
-                if accessor[2]:
-                    relateds.add(related)
+                related_lookup = accessor.related_lookup
+                if related_lookup:
+                    related_lookups.add(related_lookup)
             queryset = self
-        if relateds:
-            queryset = queryset.select_related(*relateds)
+        if related_lookups:
+            queryset = queryset.select_related(*related_lookups)
         return queryset
 
     def exclude_subclasses(self):

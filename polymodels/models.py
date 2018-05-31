@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
 import threading
-from collections import defaultdict
+from collections import defaultdict, namedtuple
 
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
@@ -13,7 +13,8 @@ from django.db.models.signals import class_prepared
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
 
-EMPTY_ACCESSOR = ((), None, '')
+SubclassAccessor = namedtuple('SubclassAccessor', ['attrs', 'proxy', 'related_lookup'])
+EMPTY_ACCESSOR = SubclassAccessor((), None, '')
 
 
 class SubclassAccessors(defaultdict):
@@ -58,13 +59,13 @@ class SubclassAccessors(defaultdict):
             for model in self.apps.get_models():
                 opts = model._meta
                 if opts.proxy and issubclass(model, owner) and (owner._meta.proxy or opts.concrete_model is owner):
-                    accessors[model] = ((), model, '')
+                    accessors[model] = SubclassAccessor((), model, '')
                 # Use .get() instead of `in` as proxy inheritance is also
                 # stored in _meta.parents as None.
                 elif opts.parents.get(owner):
                     part = opts.model_name
                     for child, (parts, proxy, _lookup) in self[self.get_model_key(opts)].items():
-                        accessors[child] = ((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))
+                        accessors[child] = SubclassAccessor((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))
         return accessors
 
 
@@ -78,15 +79,15 @@ class BasePolymorphicModel(models.Model):
         if to is None:
             content_type_id = getattr(self, "%s_id" % self.CONTENT_TYPE_FIELD)
             to = ContentType.objects.get_for_id(content_type_id).model_class()
-        attrs, proxy, _lookup = self.subclass_accessors[to]
+        accessor = self.subclass_accessors[to]
         # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
         type_casted = self
-        for attr in attrs:
+        for attr in accessor.attrs:
             type_casted = getattr(type_casted, attr)
         # If it's a proxy model we make sure to type cast it
-        if proxy:
-            type_casted = copy_fields(type_casted, proxy)
+        if accessor.proxy:
+            type_casted = copy_fields(type_casted, accessor.proxy)
         return type_casted
 
     def save(self, *args, **kwargs):

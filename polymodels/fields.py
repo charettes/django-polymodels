@@ -9,7 +9,7 @@ from django.db.models.fields.related import (
     RelatedField, lazy_related_operation,
 )
 from django.utils.deconstruct import deconstructible
-from django.utils.functional import LazyObject
+from django.utils.functional import LazyObject, empty
 from django.utils.six import string_types
 from django.utils.translation import ugettext_lazy as _
 
@@ -50,6 +50,15 @@ class LazyPolymorphicTypeQueryset(LazyObject):
         self._wrapped = remote_field.model._default_manager.using(db).complex_filter(
             remote_field.limit_choices_to()
         )
+
+    def __getattr__(self, attr):
+        # ModelChoiceField._set_queryset(queryset) calls queryset.all() on
+        # Django 2.1+ in order to clear possible cached results.
+        # Since no results might have been cached before _setup() is called
+        # it's safe to keep deferring until something else is accessed.
+        if attr == 'all' and self._wrapped is empty:
+            return lambda: self
+        return super(LazyPolymorphicTypeQueryset, self).__getattr__(attr)
 
 
 @deconstructible

@@ -94,8 +94,7 @@ class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):
     def get_queryset(self):
         queryset = super(PolymorphicManager, self).get_queryset()
         model = self.model
-        opts = model._meta
-        if opts.proxy:
+        if model._meta.proxy:
             # Select only associated model and its subclasses.
             queryset = queryset.filter(**self.model.subclasses_lookup())
         return queryset

@@ -100,6 +100,25 @@ class PolymorphicQuerySetTest(TestCase):
         self.assertQuerysetEqual(Monkey.objects.exclude_subclasses(),
                                  ['<Monkey: donkey kong>'])
 
+    def test_select_subclasses_prefetch_related(self):
+        animal = Animal.objects.create(name='animal')
+        mammal = Mammal.objects.create(name='mammal')
+        monkey = monkey = Monkey.objects.create(name='monkey')
+        other_monkey = Monkey.objects.create(name='monkey')
+        monkey.friends.add(other_monkey)
+        queryset = Animal.objects.select_subclasses().prefetch_related(
+            'mammal__monkey__friends',
+        )
+        with self.assertNumQueries(2):
+            self.assertSequenceEqual(queryset, [
+                animal,
+                mammal,
+                monkey,
+                other_monkey,
+            ])
+            self.assertSequenceEqual(queryset[2].friends.all(), [other_monkey])
+            self.assertSequenceEqual(queryset[3].friends.all(), [monkey])
+
 
 class PolymorphicManagerTest(TestCase):
     def test_improperly_configured(self):

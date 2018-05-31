@@ -37,6 +37,8 @@ class Mammal(Animal):
 
 
 class Monkey(Mammal):
+    friends = models.ManyToManyField('self')
+
     class Meta:
         app_label = 'polymodels'
 

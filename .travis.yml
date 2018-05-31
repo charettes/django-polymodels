@@ -39,6 +39,7 @@ script:
 - tox
 after_success:
 - if [ -f .coverage ]; then coveralls; fi
+before_deploy: pip install django
 deploy:
   provider: pypi
   user: charettes

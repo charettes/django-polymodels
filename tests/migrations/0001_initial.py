@@ -90,6 +90,12 @@ class Migration(migrations.Migration):
                         serialize=False,
                         verbose_name='ID',
                     ),
+                ),
+                (
+                    'zoos',
+                    models.ManyToManyField(
+                        'Animal', related_name='zoos'
+                    ),
                 )
             ],
         ),

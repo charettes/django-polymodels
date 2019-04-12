@@ -8,7 +8,7 @@ from polymodels.models import PolymorphicModel
 
 
 class Zoo(models.Model):
-    animals = models.ManyToManyField('Animal')
+    animals = models.ManyToManyField('Animal', related_name='zoos')
 
 
 @python_2_unicode_compatible

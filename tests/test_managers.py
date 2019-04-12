@@ -6,7 +6,7 @@ from django.db import models
 from polymodels.managers import PolymorphicManager
 
 from .base import TestCase
-from .models import Animal, BigSnake, HugeSnake, Mammal, Monkey, Snake
+from .models import Animal, BigSnake, HugeSnake, Mammal, Monkey, Snake, Zoo
 
 
 class PolymorphicQuerySetTest(TestCase):
@@ -101,21 +101,27 @@ class PolymorphicQuerySetTest(TestCase):
                                  ['<Monkey: donkey kong>'])
 
     def test_select_subclasses_prefetch_related(self):
+        zoo = Zoo.objects.create()
         animal = Animal.objects.create(name='animal')
         mammal = Mammal.objects.create(name='mammal')
-        monkey = monkey = Monkey.objects.create(name='monkey')
+        monkey = Monkey.objects.create(name='monkey')
+        zoo.animals.add(animal, mammal, monkey)
         other_monkey = Monkey.objects.create(name='monkey')
         monkey.friends.add(other_monkey)
         queryset = Animal.objects.select_subclasses().prefetch_related(
+            'zoos',
             'mammal__monkey__friends',
         )
-        with self.assertNumQueries(2):
+        with self.assertNumQueries(3):
             self.assertSequenceEqual(queryset, [
                 animal,
                 mammal,
                 monkey,
                 other_monkey,
             ])
+            self.assertSequenceEqual(queryset[0].zoos.all(), [zoo])
+            self.assertSequenceEqual(queryset[1].zoos.all(), [zoo])
+            self.assertSequenceEqual(queryset[2].zoos.all(), [zoo])
             self.assertSequenceEqual(queryset[2].friends.all(), [other_monkey])
             self.assertSequenceEqual(queryset[3].friends.all(), [monkey])
 

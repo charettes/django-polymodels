@@ -9,6 +9,7 @@ from django.db.models.query import ModelIterable
 from django.utils.six.moves import map
 
 type_cast_iterator = partial(map, methodcaller('type_cast'))
+type_cast_prefetch_iterator = partial(map, methodcaller('type_cast', with_prefetched_objects=True))
 
 
 class PolymorphicModelIterable(ModelIterable):
@@ -76,7 +77,7 @@ class PolymorphicQuerySet(models.query.QuerySet):
         if prefetch_related_objects:
             self._prefetch_related_objects()
             if type_cast:
-                self._result_cache = list(type_cast_iterator(self._result_cache))
+                self._result_cache = list(type_cast_prefetch_iterator(self._result_cache))
 
 
 class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):

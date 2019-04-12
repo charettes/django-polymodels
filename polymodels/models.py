@@ -27,15 +27,17 @@ class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'relate
             return self._identity
         return attrgetter('.'.join(self.attrs))
 
-    def __call__(self, obj):
+    def __call__(self, obj, with_prefetched_objects=False):
         # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
-        obj = self.attrgetter(obj)
+        casted = self.attrgetter(obj)
         # If it's a proxy model we make sure to type cast it
         proxy = self.proxy
         if proxy:
-            obj = copy_fields(obj, proxy)
-        return obj
+            casted = copy_fields(casted, proxy)
+        if with_prefetched_objects:
+            casted._prefetched_objects_cache.update(obj._prefetched_objects_cache)
+        return casted
 
 
 EMPTY_ACCESSOR = SubclassAccessor((), None, '')
@@ -99,12 +101,12 @@ class BasePolymorphicModel(models.Model):
 
     subclass_accessors = SubclassAccessors()
 
-    def type_cast(self, to=None):
+    def type_cast(self, to=None, with_prefetched_objects=False):
         if to is None:
             content_type_id = getattr(self, "%s_id" % self.CONTENT_TYPE_FIELD)
             to = ContentType.objects.get_for_id(content_type_id).model_class()
         accessor = self.subclass_accessors[to]
-        return accessor(self)
+        return accessor(self, with_prefetched_objects)
 
     def save(self, *args, **kwargs):
         if self._state.adding and getattr(self, self.CONTENT_TYPE_FIELD, None) is None:

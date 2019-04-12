@@ -8,7 +8,6 @@ from django.db import models
 from django.db.models.query import ModelIterable
 from django.utils.six.moves import map
 
-
 type_cast_iterator = partial(map, methodcaller('type_cast'))
 
 

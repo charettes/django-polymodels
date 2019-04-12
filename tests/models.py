@@ -10,16 +10,12 @@ from polymodels.models import PolymorphicModel
 class Zoo(models.Model):
     animals = models.ManyToManyField('Animal')
 
-    class Meta:
-        app_label = 'polymodels'
-
 
 @python_2_unicode_compatible
 class Animal(PolymorphicModel):
     name = models.CharField(max_length=50)
 
     class Meta:
-        app_label = 'polymodels'
         ordering = ['id']
 
     def __str__(self):
@@ -32,15 +28,11 @@ class NotInstalledAnimal(Animal):
 
 
 class Mammal(Animal):
-    class Meta:
-        app_label = 'polymodels'
+    pass
 
 
 class Monkey(Mammal):
     friends = models.ManyToManyField('self')
-
-    class Meta:
-        app_label = 'polymodels'
 
 
 class Trait(PolymorphicModel):
@@ -48,13 +40,9 @@ class Trait(PolymorphicModel):
     mammal_type = PolymorphicTypeField(Mammal, on_delete=models.CASCADE, blank=True, null=True)
     snake_type = PolymorphicTypeField('Snake', on_delete=models.CASCADE)
 
-    class Meta:
-        app_label = 'polymodels'
-
 
 class AcknowledgedTrait(Trait):
     class Meta:
-        app_label = 'polymodels'
         proxy = True
 
 
@@ -62,7 +50,6 @@ class Reptile(Animal):
     length = models.SmallIntegerField()
 
     class Meta:
-        app_label = 'polymodels'
         abstract = True
         ordering = ['id']
 
@@ -71,17 +58,14 @@ class Snake(Reptile):
     color = models.CharField(max_length=100, blank=True)
 
     class Meta:
-        app_label = 'polymodels'
         ordering = ['id']
 
 
 class BigSnake(Snake):
     class Meta:
-        app_label = 'polymodels'
         proxy = True
 
 
 class HugeSnake(BigSnake):
     class Meta:
-        app_label = 'polymodels'
         proxy = True

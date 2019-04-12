@@ -13,5 +13,3 @@ INSTALLED_APPS = [
     'polymodels',
     'tests',
 ]
-
-SILENCED_SYSTEM_CHECKS = ['1_7.W001']

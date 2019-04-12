@@ -17,16 +17,16 @@ from .models import AcknowledgedTrait, HugeSnake, Snake, Trait
 
 
 class ContentTypeReferenceTests(TestCase):
-    reference = ContentTypeReference(str('polymodels'), str('snake'))
+    reference = ContentTypeReference(str('tests'), str('snake'))
 
     def test_equality(self):
-        self.assertEqual(self.reference, ContentTypeReference('polymodels', 'snake'))
+        self.assertEqual(self.reference, ContentTypeReference('tests', 'snake'))
 
     def test_retreival(self):
         self.assertEqual(self.reference(), get_content_type(Snake).pk)
 
     def test_repr(self):
-        self.assertEqual(repr(self.reference), "ContentTypeReference('polymodels', 'snake')")
+        self.assertEqual(repr(self.reference), "ContentTypeReference('tests', 'snake')")
 
 
 class PolymorphicTypeFieldTests(TestCase):

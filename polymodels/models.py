@@ -13,7 +13,20 @@ from django.db.models.signals import class_prepared
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
 
-SubclassAccessor = namedtuple('SubclassAccessor', ['attrs', 'proxy', 'related_lookup'])
+
+class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'related_lookup'])):
+    def __call__(self, obj):
+        # Cast to the right concrete model by going up in the
+        # SingleRelatedObjectDescriptor chain
+        for attr in self.attrs:
+            obj = getattr(obj, attr)
+        # If it's a proxy model we make sure to type cast it
+        proxy = self.proxy
+        if proxy:
+            obj = copy_fields(obj, proxy)
+        return obj
+
+
 EMPTY_ACCESSOR = SubclassAccessor((), None, '')
 
 
@@ -80,15 +93,7 @@ class BasePolymorphicModel(models.Model):
             content_type_id = getattr(self, "%s_id" % self.CONTENT_TYPE_FIELD)
             to = ContentType.objects.get_for_id(content_type_id).model_class()
         accessor = self.subclass_accessors[to]
-        # Cast to the right concrete model by going up in the
-        # SingleRelatedObjectDescriptor chain
-        type_casted = self
-        for attr in accessor.attrs:
-            type_casted = getattr(type_casted, attr)
-        # If it's a proxy model we make sure to type cast it
-        if accessor.proxy:
-            type_casted = copy_fields(type_casted, accessor.proxy)
-        return type_casted
+        return accessor(self)
 
     def save(self, *args, **kwargs):
         if self._state.adding and getattr(self, self.CONTENT_TYPE_FIELD, None) is None:

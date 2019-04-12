@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 
 import threading
 from collections import defaultdict, namedtuple
+from operator import attrgetter
 
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
@@ -9,17 +10,27 @@ from django.db import models
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
+from django.utils.functional import cached_property
 
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
 
 
 class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'related_lookup'])):
+    @staticmethod
+    def _identity(obj):
+        return obj
+
+    @cached_property
+    def attrgetter(self):
+        if not self.attrs:
+            return self._identity
+        return attrgetter('.'.join(self.attrs))
+
     def __call__(self, obj):
         # Cast to the right concrete model by going up in the
         # SingleRelatedObjectDescriptor chain
-        for attr in self.attrs:
-            obj = getattr(obj, attr)
+        obj = self.attrgetter(obj)
         # If it's a proxy model we make sure to type cast it
         proxy = self.proxy
         if proxy:

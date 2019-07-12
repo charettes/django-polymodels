@@ -36,7 +36,10 @@ class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'relate
         if proxy:
             casted = copy_fields(casted, proxy)
         if with_prefetched_objects:
-            casted._prefetched_objects_cache.update(obj._prefetched_objects_cache)
+            try:
+                casted._prefetched_objects_cache.update(obj._prefetched_objects_cache)
+            except AttributeError:
+                casted._prefetched_objects_cache = obj._prefetched_objects_cache
         return casted
 
 

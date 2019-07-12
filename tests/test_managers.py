@@ -108,6 +108,18 @@ class PolymorphicQuerySetTest(TestCase):
         zoo.animals.add(animal, mammal, monkey)
         other_monkey = Monkey.objects.create(name='monkey')
         monkey.friends.add(other_monkey)
+        queryset = Animal.objects.select_subclasses().prefetch_related('zoos')
+        with self.assertNumQueries(2):
+            self.assertSequenceEqual(queryset, [
+                animal,
+                mammal,
+                monkey,
+                other_monkey,
+            ])
+            self.assertSequenceEqual(queryset[0].zoos.all(), [zoo])
+            self.assertSequenceEqual(queryset[1].zoos.all(), [zoo])
+            self.assertSequenceEqual(queryset[2].zoos.all(), [zoo])
+        # Test prefetch related combination.
         queryset = Animal.objects.select_subclasses().prefetch_related(
             'zoos',
             'mammal__monkey__friends',

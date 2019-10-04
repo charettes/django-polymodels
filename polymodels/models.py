@@ -6,7 +6,7 @@ from operator import attrgetter
 
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
-from django.db import models
+from django.db import models, transaction
 from django.db.models.constants import LOOKUP_SEP
 from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
@@ -116,6 +116,26 @@ class BasePolymorphicModel(models.Model):
             content_type = get_content_type(self.__class__)
             setattr(self, self.CONTENT_TYPE_FIELD, content_type)
         return super(BasePolymorphicModel, self).save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        kept_parent = None
+        if keep_parents:
+            parent_ptr = next(iter(self._meta.concrete_model._meta.parents.values()), None)
+            if parent_ptr:
+                kept_parent = getattr(self, parent_ptr.name)
+        if kept_parent:
+            context_manager = transaction.atomic(using=using, savepoint=False)
+        else:
+            context_manager = transaction.mark_for_rollback_on_error(using=using)
+        with context_manager:
+            deletion = super(BasePolymorphicModel, self).delete(
+                using=using, keep_parents=keep_parents
+            )
+            if kept_parent:
+                parent_content_type = get_content_type(kept_parent)
+                setattr(kept_parent, self.CONTENT_TYPE_FIELD, parent_content_type)
+                kept_parent.save(update_fields=[self.CONTENT_TYPE_FIELD])
+        return deletion
 
     @classmethod
     def content_type_lookup(cls, *models, **kwargs):

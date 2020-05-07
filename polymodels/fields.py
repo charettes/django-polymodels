@@ -10,8 +10,9 @@ from django.db.models.fields.related import (
 )
 from django.utils.deconstruct import deconstructible
 from django.utils.functional import LazyObject, empty
-from django.utils.six import string_types
 from django.utils.translation import ugettext_lazy as _
+
+from six import string_types
 
 from .models import BasePolymorphicModel
 from .utils import get_content_type

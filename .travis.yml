@@ -35,7 +35,13 @@ matrix:
     dist: xenial
     sudo: true
   - python: 3.6
+    env: TOXENV=py36-3.0
+    dist: xenial
+    sudo: true
+  - python: 3.6
     env: TOXENV=py36-master
+    dist: xenial
+    sudo: true
   - python: 3.7
     env: TOXENV=py37-2.0
     dist: xenial
@@ -49,7 +55,19 @@ matrix:
     dist: xenial
     sudo: true
   - python: 3.7
+    env: TOXENV=py37-3.0
+    dist: xenial
+    sudo: true
+  - python: 3.7
     env: TOXENV=py37-master
+    dist: xenial
+    sudo: true
+  - python: 3.8
+    env: TOXENV=py38-3.0
+    dist: xenial
+    sudo: true
+  - python: 3.8
+    env: TOXENV=py38-master
     dist: xenial
     sudo: true
   allow_failures:

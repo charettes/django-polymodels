@@ -6,7 +6,8 @@ from operator import methodcaller
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.query import ModelIterable
-from django.utils.six.moves import map
+
+from six.moves import map
 
 type_cast_iterator = partial(map, methodcaller('type_cast'))
 type_cast_prefetch_iterator = partial(map, methodcaller('type_cast', with_prefetched_objects=True))

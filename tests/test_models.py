@@ -142,9 +142,12 @@ class BasePolymorphicModelTest(TestCase):
 
     def test_delete_keep_parents(self):
         snake = HugeSnake.objects.create(name='snek', length=30)
+        animal_pk = snake.pk
         animal_content_type = ContentType.objects.get_for_model(Animal)
+
         snake.delete(keep_parents=True)
-        self.assertEqual(snake.animal_ptr.content_type, animal_content_type)
+        animal = Animal.objects.get(pk=animal_pk)
+        self.assertEqual(animal.content_type, animal_content_type)
 
 
 class SubclassAccessorsTests(SimpleTestCase):

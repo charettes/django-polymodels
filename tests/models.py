@@ -1,10 +1,15 @@
 from __future__ import unicode_literals
 
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 
 from polymodels.fields import PolymorphicTypeField
 from polymodels.models import PolymorphicModel
+
+try:
+    from django.utils.encoding import python_2_unicode_compatible
+except ImportError:
+    def python_2_unicode_compatible(cls):
+        return cls
 
 
 class Zoo(models.Model):

@@ -8,12 +8,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.core import checks
 from django.db import models, transaction
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 from django.utils.functional import cached_property
 
 from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
+
+try:
+    from django.core.exceptions import FieldDoesNotExist
+except ImportError:
+    from django.db.models.fields import FieldDoesNotExist
 
 
 class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'related_lookup'])):

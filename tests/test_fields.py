@@ -187,6 +187,13 @@ class PolymorphicTypeFieldTests(TestCase):
             # doesn't default to models.CASCADE anymore.
             if django.VERSION >= (1, 9):
                 deconstruction['on_delete'] = models.CASCADE
+
+            # As Django 3.1+ all field parameters are listed
+            if django.VERSION >= (3, 1):
+                deconstruction.update({
+                    'to': 'contenttypes.contenttype',
+                    'polymorphic_type': 'polymodels.Foo'
+                })
             return deconstruction
 
         self.assertDeconstructionEqual(Foo._meta.get_field('foo'), (

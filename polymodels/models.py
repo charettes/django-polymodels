@@ -4,9 +4,9 @@ from operator import attrgetter
 
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks
+from django.core.exceptions import FieldDoesNotExist
 from django.db import models, transaction
 from django.db.models.constants import LOOKUP_SEP
-from django.db.models.fields import FieldDoesNotExist
 from django.db.models.signals import class_prepared
 from django.utils.functional import cached_property
 

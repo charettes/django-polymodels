@@ -1,14 +1,9 @@
-from __future__ import unicode_literals
-
 from django.forms import models
-from django.utils.six import with_metaclass
 
 
 class PolymorphicModelFormMetaclass(models.ModelFormMetaclass):
     def __new__(cls, name, bases, attrs):
-        form = super(PolymorphicModelFormMetaclass, cls).__new__(
-            cls, name, bases, attrs
-        )
+        form = super().__new__(cls, name, bases, attrs)
         model = form._meta.model
         form._meta.polymorphic_forms = {model: form}
         if model:
@@ -25,9 +20,9 @@ class PolymorphicModelFormMetaclass(models.ModelFormMetaclass):
             raise TypeError("No form registered for %s." % model)
 
 
-class PolymorphicModelForm(with_metaclass(PolymorphicModelFormMetaclass, models.ModelForm)):
+class PolymorphicModelForm(models.ModelForm, metaclass=PolymorphicModelFormMetaclass):
     def __new__(cls, *args, **kwargs):
         instance = kwargs.get('instance', None)
         if instance:
             cls = cls[instance.__class__]
-        return super(PolymorphicModelForm, cls).__new__(cls)
+        return super().__new__(cls)

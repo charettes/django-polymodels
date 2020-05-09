@@ -1,12 +1,9 @@
-from __future__ import unicode_literals
-
 from functools import partial
 from operator import methodcaller
 
 from django.core.exceptions import ImproperlyConfigured
 from django.db import models
 from django.db.models.query import ModelIterable
-from django.utils.six.moves import map
 
 type_cast_iterator = partial(map, methodcaller('type_cast'))
 type_cast_prefetch_iterator = partial(map, methodcaller('type_cast', with_prefetched_objects=True))
@@ -15,10 +12,10 @@ type_cast_prefetch_iterator = partial(map, methodcaller('type_cast', with_prefet
 class PolymorphicModelIterable(ModelIterable):
     def __init__(self, queryset, type_cast=True, **kwargs):
         self.type_cast = type_cast
-        super(PolymorphicModelIterable, self).__init__(queryset, **kwargs)
+        super().__init__(queryset, **kwargs)
 
     def __iter__(self):
-        iterator = super(PolymorphicModelIterable, self).__iter__()
+        iterator = super().__iter__()
         if self.type_cast:
             iterator = type_cast_iterator(iterator)
         return iterator
@@ -89,10 +86,10 @@ class PolymorphicManager(models.Manager.from_queryset(PolymorphicQuerySet)):
                 '`%s` can only be used on '
                 '`BasePolymorphicModel` subclasses.' % self.__class__.__name__
             )
-        return super(PolymorphicManager, self).contribute_to_class(model, name)
+        return super().contribute_to_class(model, name)
 
     def get_queryset(self):
-        queryset = super(PolymorphicManager, self).get_queryset()
+        queryset = super().get_queryset()
         model = self.model
         if model._meta.proxy:
             # Select only associated model and its subclasses.

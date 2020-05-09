@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django.apps.registry import Apps
 from django.contrib.contenttypes.models import ContentType
 from django.core import checks

@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .base import TestCase
 from .forms import AnimalForm, BigSnakeForm, SnakeForm
 from .models import Animal, BigSnake, Monkey, Snake

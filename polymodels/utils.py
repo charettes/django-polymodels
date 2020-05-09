@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from functools import partial
 
 from django.contrib.contenttypes.models import ContentType

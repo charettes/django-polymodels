@@ -1,7 +1,4 @@
-from __future__ import unicode_literals
-
 from django.db import models
-from django.utils.encoding import python_2_unicode_compatible
 
 from polymodels.fields import PolymorphicTypeField
 from polymodels.models import PolymorphicModel
@@ -11,7 +8,6 @@ class Zoo(models.Model):
     animals = models.ManyToManyField('Animal', related_name='zoos')
 
 
-@python_2_unicode_compatible
 class Animal(PolymorphicModel):
     name = models.CharField(max_length=50)
 

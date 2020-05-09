@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from .base import TestCase
 from .models import Mammal, Monkey, Zoo
 

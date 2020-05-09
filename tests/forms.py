@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from polymodels.forms import PolymorphicModelForm
 
 from .models import Animal, BigSnake, Snake

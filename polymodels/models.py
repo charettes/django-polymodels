@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 import threading
 from collections import defaultdict, namedtuple
 from operator import attrgetter
@@ -115,7 +113,7 @@ class BasePolymorphicModel(models.Model):
         if self._state.adding and getattr(self, self.CONTENT_TYPE_FIELD, None) is None:
             content_type = get_content_type(self.__class__)
             setattr(self, self.CONTENT_TYPE_FIELD, content_type)
-        return super(BasePolymorphicModel, self).save(*args, **kwargs)
+        return super().save(*args, **kwargs)
 
     def delete(self, using=None, keep_parents=False):
         kept_parent = None
@@ -128,9 +126,7 @@ class BasePolymorphicModel(models.Model):
         else:
             context_manager = transaction.mark_for_rollback_on_error(using=using)
         with context_manager:
-            deletion = super(BasePolymorphicModel, self).delete(
-                using=using, keep_parents=keep_parents
-            )
+            deletion = super().delete(using=using, keep_parents=keep_parents)
             if kept_parent:
                 parent_content_type = get_content_type(kept_parent)
                 setattr(kept_parent, self.CONTENT_TYPE_FIELD, parent_content_type)
@@ -155,7 +151,7 @@ class BasePolymorphicModel(models.Model):
 
     @classmethod
     def check(cls, **kwargs):
-        errors = super(BasePolymorphicModel, cls).check(**kwargs)
+        errors = super().check(**kwargs)
         try:
             content_type_field_name = getattr(cls, 'CONTENT_TYPE_FIELD')
         except AttributeError:

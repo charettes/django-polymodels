@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from django import forms
 from django.apps import apps
 from django.core import checks
@@ -10,14 +8,13 @@ from django.db.models.fields.related import (
 )
 from django.utils.deconstruct import deconstructible
 from django.utils.functional import LazyObject, empty
-from django.utils.six import string_types
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 
 from .models import BasePolymorphicModel
 from .utils import get_content_type
 
 
-class LimitChoicesToSubclasses(object):
+class LimitChoicesToSubclasses:
     def __init__(self, field, limit_choices_to):
         self.field = field
         self.limit_choices_to = limit_choices_to
@@ -41,7 +38,7 @@ class LimitChoicesToSubclasses(object):
 
 class LazyPolymorphicTypeQueryset(LazyObject):
     def __init__(self, remote_field, db):
-        super(LazyPolymorphicTypeQueryset, self).__init__()
+        super().__init__()
         self.__dict__.update(remote_field=remote_field, db=db)
 
     def _setup(self):
@@ -58,11 +55,11 @@ class LazyPolymorphicTypeQueryset(LazyObject):
         # it's safe to keep deferring until something else is accessed.
         if attr == 'all' and self._wrapped is empty:
             return lambda: self
-        return super(LazyPolymorphicTypeQueryset, self).__getattr__(attr)
+        return super().__getattr__(attr)
 
 
 @deconstructible
-class ContentTypeReference(object):
+class ContentTypeReference:
     def __init__(self, app_label, model_name):
         self.app_label = app_label
         self.model_name = model_name
@@ -77,7 +74,7 @@ class ContentTypeReference(object):
         return get_content_type(model).pk
 
     def __repr__(self):
-        return str("ContentTypeReference(%r, %r)" % (self.app_label, self.model_name))
+        return "ContentTypeReference(%r, %r)" % (self.app_label, self.model_name)
 
 
 class PolymorphicTypeField(ForeignKey):
@@ -98,12 +95,12 @@ class PolymorphicTypeField(ForeignKey):
         for kwarg, value in self.default_kwargs.items():
             kwargs.setdefault(kwarg, value)
         kwargs['limit_choices_to'] = LimitChoicesToSubclasses(self, kwargs.pop('limit_choices_to', None))
-        super(PolymorphicTypeField, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     def contribute_to_class(self, cls, name):
-        super(PolymorphicTypeField, self).contribute_to_class(cls, name)
+        super().contribute_to_class(cls, name)
         polymorphic_type = self.polymorphic_type
-        if (isinstance(polymorphic_type, string_types) or
+        if (isinstance(polymorphic_type, str) or
                 polymorphic_type._meta.pk is None):
             def resolve_polymorphic_type(model, related_model, field):
                 field.do_polymorphic_type(related_model)
@@ -123,8 +120,8 @@ class PolymorphicTypeField(ForeignKey):
         )
 
     def check(self, **kwargs):
-        errors = super(PolymorphicTypeField, self).check(**kwargs)
-        if isinstance(self.polymorphic_type, string_types):
+        errors = super().check(**kwargs)
+        if isinstance(self.polymorphic_type, str):
             errors.append(checks.Error(
                 ("Field defines a relation with model '%s', which "
                  "is either not installed, or is abstract.") % self.polymorphic_type,
@@ -139,7 +136,7 @@ class PolymorphicTypeField(ForeignKey):
 
     def formfield(self, **kwargs):
         db = kwargs.pop('using', None)
-        if isinstance(self.polymorphic_type, string_types):
+        if isinstance(self.polymorphic_type, str):
             raise ValueError(
                 "Cannot create form field for %r yet, because its related model %r has not been loaded yet" % (
                     self.name, self.polymorphic_type
@@ -154,7 +151,7 @@ class PolymorphicTypeField(ForeignKey):
         return super(RelatedField, self).formfield(**defaults)
 
     def deconstruct(self):
-        name, path, args, kwargs = super(PolymorphicTypeField, self).deconstruct()
+        name, path, args, kwargs = super().deconstruct()
         opts = getattr(self.polymorphic_type, '_meta', None)
         kwargs['polymorphic_type'] = "%s.%s" % (opts.app_label, opts.object_name) if opts else self.polymorphic_type
         for kwarg, value in list(kwargs.items()):

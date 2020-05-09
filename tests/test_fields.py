@@ -1,6 +1,3 @@
-from __future__ import unicode_literals
-
-import django
 from django.apps.registry import Apps
 from django.core import checks
 from django.core.exceptions import ValidationError
@@ -104,25 +101,14 @@ class PolymorphicTypeFieldTests(TestCase):
             class Meta:
                 apps = test_apps
 
-        def assert_checks_equal(field, errors):
-            # TODO: Remove when dropping support for Django 1.8.
-            if django.VERSION < (1, 9):
-                errors.insert(0, checks.Error(
-                    "Field defines a relation with model 'ContentType', "
-                    "which is either not installed, or is abstract.",
-                    id='fields.E300',
-                    obj=field,
-                ))
-            self.assertEqual(field.check(), errors)
-
-        assert_checks_equal(CheckModel._meta.get_field('valid'), [])
-        assert_checks_equal(CheckModel._meta.get_field('unresolved'), [
+        self.assertEqual(CheckModel._meta.get_field('valid').check(), [])
+        self.assertEqual(CheckModel._meta.get_field('unresolved').check(), [
             checks.Error(
                 "Field defines a relation with model 'unresolved', which is either not installed, or is abstract.",
                 id='fields.E300',
             ),
         ])
-        assert_checks_equal(CheckModel._meta.get_field('non_polymorphic_base'), [
+        self.assertEqual(CheckModel._meta.get_field('non_polymorphic_base').check(), [
             checks.Error(
                 "The ContentType type is not a subclass of BasePolymorphicModel.",
                 id='polymodels.E004',
@@ -182,32 +168,29 @@ class PolymorphicTypeFieldTests(TestCase):
                 apps = test_apps
                 app_label = 'polymodels'
 
-        def django_version_agnostic(deconstruction):
-            # As of Django 1.9+ on_delete is a required parameter and
-            # doesn't default to models.CASCADE anymore.
-            if django.VERSION >= (1, 9):
-                deconstruction['on_delete'] = models.CASCADE
-            return deconstruction
-
         self.assertDeconstructionEqual(Foo._meta.get_field('foo'), (
-            'foo', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+            'foo', 'polymodels.fields.PolymorphicTypeField', [], {
                 'polymorphic_type': 'polymodels.Foo',
-            })
+                'on_delete': models.CASCADE,
+            }
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo'), (
-            'foo', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+            'foo', 'polymodels.fields.PolymorphicTypeField', [], {
                 'polymorphic_type': 'polymodels.Foo',
-            })
+                'on_delete': models.CASCADE,
+            }
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_null'), (
-            'foo_null', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+            'foo_null', 'polymodels.fields.PolymorphicTypeField', [], {
                 'polymorphic_type': 'polymodels.Foo',
                 'null': True,
-            })
+                'on_delete': models.CASCADE,
+            }
         ))
         self.assertDeconstructionEqual(Bar._meta.get_field('foo_default'), (
-            'foo_default', 'polymodels.fields.PolymorphicTypeField', [], django_version_agnostic({
+            'foo_default', 'polymodels.fields.PolymorphicTypeField', [], {
                 'polymorphic_type': 'polymodels.Foo',
                 'default': get_content_type(Foo).pk,
-            })
+                'on_delete': models.CASCADE,
+            }
         ))

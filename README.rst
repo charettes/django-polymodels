@@ -38,7 +38,7 @@ Subclass ``PolymorphicModel``, an abstract model class.
     class Animal(PolymorphicModel):
         name = models.CharField(max_length=255)
 
-        def __unicode__(self):
+        def __str__(self):
             return self.name
 
     class Mammal(Animal):

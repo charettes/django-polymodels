@@ -17,6 +17,7 @@ jobs:
     - stage: deploy
       if: tag IS present
       python: 3.6
+      before_deploy: pip install Django>=2.2,<3.0
       deploy:
         skip_existing: true
         provider: pypi

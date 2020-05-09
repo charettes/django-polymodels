@@ -85,7 +85,7 @@ class PolymorphicTypeField(ForeignKey):
         'Content type of a subclass of %(type)s'
     )
     default_kwargs = {
-        'to': 'contenttypes.ContentType',
+        'to': 'contenttypes.contenttype',
         'related_name': '+',
     }
 

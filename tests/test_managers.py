@@ -31,7 +31,7 @@ class PolymorphicQuerySetTest(TestCase):
                                       '<BigSnake: big snake>',
                                       '<HugeSnake: huge snake>'])
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(animals.iterator(),
+            self.assertQuerysetEqual(list(animals.iterator()),
                                      ['<Animal: animal>',
                                       '<Mammal: mammal>',
                                       '<Monkey: monkey>',

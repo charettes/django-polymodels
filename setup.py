@@ -11,6 +11,7 @@ setup(
     version=__version__,
     description='Polymorphic models implementation for django',
     long_description=long_desc,
+    long_description_content_type='text/x-rst',
     url=github_url,
     author='Simon Charette',
     author_email='charette.s@gmail.com',

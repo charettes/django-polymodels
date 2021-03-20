@@ -11,3 +11,5 @@ INSTALLED_APPS = [
     'polymodels',
     'tests',
 ]
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

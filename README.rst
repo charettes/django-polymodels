@@ -5,8 +5,9 @@ django-polymodels
 A django application that provides a simple way to retrieve models type casted
 to their original ``ContentType``.
 
-.. image:: https://travis-ci.org/charettes/django-polymodels.svg?branch=master
-    :target: https://travis-ci.org/charettes/django-polymodels
+.. image:: https://github.com/charettes/django-polymodels/workflows/Test/badge.svg
+    :target: https://github.com/charettes/django-polymodels/actions
+    :alt: Build Status
 
 .. image:: https://coveralls.io/repos/charettes/django-polymodels/badge.svg?branch=master&service=github
     :target: https://coveralls.io/github/charettes/django-polymodels?branch=master

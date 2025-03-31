@@ -5,17 +5,17 @@ from .models import Animal, BigSnake, Snake
 
 class AnimalForm(PolymorphicModelForm):
     class Meta:
-        fields = ['name']
+        fields = ["name"]
         model = Animal
 
 
 class SnakeForm(AnimalForm):
     class Meta:
-        fields = ['name']
+        fields = ["name"]
         model = Snake
 
 
 class BigSnakeForm(SnakeForm):
     class Meta:
-        fields = ['name']
+        fields = ["name"]
         model = BigSnake

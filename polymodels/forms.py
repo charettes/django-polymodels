@@ -22,7 +22,7 @@ class PolymorphicModelFormMetaclass(models.ModelFormMetaclass):
 
 class PolymorphicModelForm(models.ModelForm, metaclass=PolymorphicModelFormMetaclass):
     def __new__(cls, *args, **kwargs):
-        instance = kwargs.get('instance', None)
+        instance = kwargs.get("instance", None)
         if instance:
             cls = cls[instance.__class__]
         return super().__new__(cls)

@@ -14,7 +14,9 @@ from .managers import PolymorphicManager
 from .utils import copy_fields, get_content_type, get_content_types
 
 
-class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'related_lookup'])):
+class SubclassAccessor(
+    namedtuple("SubclassAccessor", ["attrs", "proxy", "related_lookup"])
+):
     @staticmethod
     def _identity(obj):
         return obj
@@ -23,7 +25,7 @@ class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'relate
     def attrgetter(self):
         if not self.attrs:
             return self._identity
-        return attrgetter('.'.join(self.attrs))
+        return attrgetter(".".join(self.attrs))
 
     def __call__(self, obj, with_prefetched_objects=False):
         # Cast to the right concrete model by going up in the
@@ -41,7 +43,7 @@ class SubclassAccessor(namedtuple('SubclassAccessor', ['attrs', 'proxy', 'relate
         return casted
 
 
-EMPTY_ACCESSOR = SubclassAccessor((), None, '')
+EMPTY_ACCESSOR = SubclassAccessor((), None, "")
 
 
 class SubclassAccessors(defaultdict):
@@ -85,14 +87,22 @@ class SubclassAccessors(defaultdict):
         with self.lock:
             for model in self.apps.get_models():
                 opts = model._meta
-                if opts.proxy and issubclass(model, owner) and (owner._meta.proxy or opts.concrete_model is owner):
-                    accessors[model] = SubclassAccessor((), model, '')
+                if (
+                    opts.proxy
+                    and issubclass(model, owner)
+                    and (owner._meta.proxy or opts.concrete_model is owner)
+                ):
+                    accessors[model] = SubclassAccessor((), model, "")
                 # Use .get() instead of `in` as proxy inheritance is also
                 # stored in _meta.parents as None.
                 elif opts.parents.get(owner):
                     part = opts.model_name
-                    for child, (parts, proxy, _lookup) in self[self.get_model_key(opts)].items():
-                        accessors[child] = SubclassAccessor((part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts))
+                    for child, (parts, proxy, _lookup) in self[
+                        self.get_model_key(opts)
+                    ].items():
+                        accessors[child] = SubclassAccessor(
+                            (part,) + parts, proxy, LOOKUP_SEP.join((part,) + parts)
+                        )
         return accessors
 
 
@@ -118,7 +128,9 @@ class BasePolymorphicModel(models.Model):
     def delete(self, using=None, keep_parents=False):
         kept_parent = None
         if keep_parents:
-            parent_ptr = next(iter(self._meta.concrete_model._meta.parents.values()), None)
+            parent_ptr = next(
+                iter(self._meta.concrete_model._meta.parents.values()), None
+            )
             if parent_ptr:
                 kept_parent = getattr(self, parent_ptr.name)
         if kept_parent:
@@ -135,7 +147,7 @@ class BasePolymorphicModel(models.Model):
 
     @classmethod
     def content_type_lookup(cls, *models, **kwargs):
-        query_name = kwargs.pop('query_name', None) or cls.CONTENT_TYPE_FIELD
+        query_name = kwargs.pop("query_name", None) or cls.CONTENT_TYPE_FIELD
         if models:
             query_name = "%s__in" % query_name
             value = set(ct.pk for ct in get_content_types(*models).values())
@@ -153,39 +165,51 @@ class BasePolymorphicModel(models.Model):
     def check(cls, **kwargs):
         errors = super().check(**kwargs)
         try:
-            content_type_field_name = getattr(cls, 'CONTENT_TYPE_FIELD')
+            content_type_field_name = getattr(cls, "CONTENT_TYPE_FIELD")
         except AttributeError:
-            errors.append(checks.Error(
-                '`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.',
-                hint=None,
-                obj=cls,
-                id='polymodels.E001',
-            ))
+            errors.append(
+                checks.Error(
+                    "`BasePolymorphicModel` subclasses must define a `CONTENT_TYPE_FIELD`.",
+                    hint=None,
+                    obj=cls,
+                    id="polymodels.E001",
+                )
+            )
         else:
             try:
                 content_type_field = cls._meta.get_field(content_type_field_name)
             except FieldDoesNotExist:
-                errors.append(checks.Error(
-                    "`CONTENT_TYPE_FIELD` points to an inexistent field '%s'." % content_type_field_name,
-                    hint=None,
-                    obj=cls,
-                    id='polymodels.E002',
-                ))
-            else:
-                if (not isinstance(content_type_field, models.ForeignKey) or
-                        content_type_field.remote_field.model is not ContentType):
-                    errors.append(checks.Error(
-                        "`%s` must be a `ForeignKey` to `ContentType`." % content_type_field_name,
+                errors.append(
+                    checks.Error(
+                        "`CONTENT_TYPE_FIELD` points to an inexistent field '%s'."
+                        % content_type_field_name,
                         hint=None,
-                        obj=content_type_field,
-                        id='polymodels.E003',
-                    ))
+                        obj=cls,
+                        id="polymodels.E002",
+                    )
+                )
+            else:
+                if (
+                    not isinstance(content_type_field, models.ForeignKey)
+                    or content_type_field.remote_field.model is not ContentType
+                ):
+                    errors.append(
+                        checks.Error(
+                            "`%s` must be a `ForeignKey` to `ContentType`."
+                            % content_type_field_name,
+                            hint=None,
+                            obj=content_type_field,
+                            id="polymodels.E003",
+                        )
+                    )
         return errors
 
 
 class PolymorphicModel(BasePolymorphicModel):
-    CONTENT_TYPE_FIELD = 'content_type'
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, related_name='+')
+    CONTENT_TYPE_FIELD = "content_type"
+    content_type = models.ForeignKey(
+        ContentType, on_delete=models.CASCADE, related_name="+"
+    )
 
     objects = PolymorphicManager()
 

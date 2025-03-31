@@ -8,185 +8,183 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [('contenttypes', '0002_remove_content_type_name')]
+    dependencies = [("contenttypes", "0002_remove_content_type_name")]
 
     operations = [
         migrations.CreateModel(
-            name='Animal',
+            name="Animal",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
-                ('name', models.CharField(max_length=50)),
+                ("name", models.CharField(max_length=50)),
             ],
-            options={'ordering': ['id']},
+            options={"ordering": ["id"]},
         ),
         migrations.CreateModel(
-            name='Trait',
+            name="Trait",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'content_type',
+                    "content_type",
                     models.ForeignKey(
                         on_delete=django.db.models.deletion.CASCADE,
-                        related_name='+',
-                        to='contenttypes.ContentType',
+                        related_name="+",
+                        to="contenttypes.ContentType",
                     ),
                 ),
                 (
-                    'mammal_type',
+                    "mammal_type",
                     polymodels.fields.PolymorphicTypeField(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        polymorphic_type='tests.Mammal',
+                        polymorphic_type="tests.Mammal",
                     ),
                 ),
                 (
-                    'snake_type',
+                    "snake_type",
                     polymodels.fields.PolymorphicTypeField(
                         on_delete=django.db.models.deletion.CASCADE,
-                        polymorphic_type='tests.Snake',
+                        polymorphic_type="tests.Snake",
                     ),
                 ),
                 (
-                    'trait_type',
+                    "trait_type",
                     polymodels.fields.PolymorphicTypeField(
                         blank=True,
                         null=True,
                         on_delete=django.db.models.deletion.CASCADE,
-                        polymorphic_type='tests.Trait',
+                        polymorphic_type="tests.Trait",
                     ),
                 ),
             ],
-            options={'abstract': False},
+            options={"abstract": False},
         ),
         migrations.CreateModel(
-            name='Zoo',
+            name="Zoo",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
                         auto_created=True,
                         primary_key=True,
                         serialize=False,
-                        verbose_name='ID',
+                        verbose_name="ID",
                     ),
                 ),
                 (
-                    'zoos',
-                    models.ManyToManyField(
-                        'Animal', related_name='zoos'
-                    ),
-                )
+                    "zoos",
+                    models.ManyToManyField("Animal", related_name="zoos"),
+                ),
             ],
         ),
         migrations.CreateModel(
-            name='Mammal',
+            name="Mammal",
             fields=[
                 (
-                    'animal_ptr',
+                    "animal_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to='tests.Animal',
+                        to="tests.Animal",
                     ),
                 )
             ],
-            options={'abstract': False},
-            bases=('tests.animal',),
+            options={"abstract": False},
+            bases=("tests.animal",),
         ),
         migrations.CreateModel(
-            name='Snake',
+            name="Snake",
             fields=[
                 (
-                    'animal_ptr',
+                    "animal_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to='tests.Animal',
+                        to="tests.Animal",
                     ),
                 ),
-                ('length', models.SmallIntegerField()),
-                ('color', models.CharField(blank=True, max_length=100)),
+                ("length", models.SmallIntegerField()),
+                ("color", models.CharField(blank=True, max_length=100)),
             ],
-            options={'ordering': ['id']},
-            bases=('tests.animal',),
+            options={"ordering": ["id"]},
+            bases=("tests.animal",),
         ),
         migrations.AddField(
-            model_name='zoo',
-            name='animals',
-            field=models.ManyToManyField(to='tests.Animal'),
+            model_name="zoo",
+            name="animals",
+            field=models.ManyToManyField(to="tests.Animal"),
         ),
         migrations.AddField(
-            model_name='animal',
-            name='content_type',
+            model_name="animal",
+            name="content_type",
             field=models.ForeignKey(
                 on_delete=django.db.models.deletion.CASCADE,
-                related_name='+',
-                to='contenttypes.ContentType',
+                related_name="+",
+                to="contenttypes.ContentType",
             ),
         ),
         migrations.CreateModel(
-            name='AcknowledgedTrait',
+            name="AcknowledgedTrait",
             fields=[],
-            options={'proxy': True, 'indexes': []},
-            bases=('tests.trait',),
+            options={"proxy": True, "indexes": []},
+            bases=("tests.trait",),
         ),
         migrations.CreateModel(
-            name='Monkey',
+            name="Monkey",
             fields=[
                 (
-                    'mammal_ptr',
+                    "mammal_ptr",
                     models.OneToOneField(
                         auto_created=True,
                         on_delete=django.db.models.deletion.CASCADE,
                         parent_link=True,
                         primary_key=True,
                         serialize=False,
-                        to='tests.Mammal',
+                        to="tests.Mammal",
                     ),
                 ),
                 (
-                    'friends',
+                    "friends",
                     models.ManyToManyField(
-                        related_name='_monkey_friends_+', to='tests.Monkey'
+                        related_name="_monkey_friends_+", to="tests.Monkey"
                     ),
                 ),
             ],
-            options={'abstract': False},
-            bases=('tests.mammal',),
+            options={"abstract": False},
+            bases=("tests.mammal",),
         ),
         migrations.CreateModel(
-            name='BigSnake',
+            name="BigSnake",
             fields=[],
-            options={'proxy': True, 'indexes': []},
-            bases=('tests.snake',),
+            options={"proxy": True, "indexes": []},
+            bases=("tests.snake",),
         ),
         migrations.CreateModel(
-            name='HugeSnake',
+            name="HugeSnake",
             fields=[],
-            options={'proxy': True, 'indexes': []},
-            bases=('tests.bigsnake',),
+            options={"proxy": True, "indexes": []},
+            bases=("tests.bigsnake",),
         ),
     ]

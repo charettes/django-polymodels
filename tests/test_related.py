@@ -9,8 +9,8 @@ class RelatedManagerTest(TestCase):
         `select_subclasses` on a related manager.
         """
         zoo = Zoo.objects.create()
-        yeti = Mammal.objects.create(name='Yeti')
-        pepe = Monkey.objects.create(name='Pepe')
+        yeti = Mammal.objects.create(name="Yeti")
+        pepe = Monkey.objects.create(name="Pepe")
         zoo.animals.add(yeti)
         zoo_animals = zoo.animals.select_subclasses()
         self.assertIn(yeti, zoo_animals)

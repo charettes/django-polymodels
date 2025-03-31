@@ -5,14 +5,14 @@ from polymodels.models import PolymorphicModel
 
 
 class Zoo(models.Model):
-    animals = models.ManyToManyField('Animal', related_name='zoos')
+    animals = models.ManyToManyField("Animal", related_name="zoos")
 
 
 class Animal(PolymorphicModel):
     name = models.CharField(max_length=50)
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
 
     def __str__(self):
         return self.name
@@ -20,7 +20,7 @@ class Animal(PolymorphicModel):
 
 class NotInstalledAnimal(Animal):
     class Meta:
-        app_label = 'not_installed'
+        app_label = "not_installed"
 
 
 class Mammal(Animal):
@@ -28,13 +28,17 @@ class Mammal(Animal):
 
 
 class Monkey(Mammal):
-    friends = models.ManyToManyField('self')
+    friends = models.ManyToManyField("self")
 
 
 class Trait(PolymorphicModel):
-    trait_type = PolymorphicTypeField('self', on_delete=models.CASCADE, blank=True, null=True)
-    mammal_type = PolymorphicTypeField(Mammal, on_delete=models.CASCADE, blank=True, null=True)
-    snake_type = PolymorphicTypeField('Snake', on_delete=models.CASCADE)
+    trait_type = PolymorphicTypeField(
+        "self", on_delete=models.CASCADE, blank=True, null=True
+    )
+    mammal_type = PolymorphicTypeField(
+        Mammal, on_delete=models.CASCADE, blank=True, null=True
+    )
+    snake_type = PolymorphicTypeField("Snake", on_delete=models.CASCADE)
 
 
 class AcknowledgedTrait(Trait):
@@ -47,14 +51,14 @@ class Reptile(Animal):
 
     class Meta:
         abstract = True
-        ordering = ['id']
+        ordering = ["id"]
 
 
 class Snake(Reptile):
     color = models.CharField(max_length=100, blank=True)
 
     class Meta:
-        ordering = ['id']
+        ordering = ["id"]
 
 
 class BigSnake(Snake):

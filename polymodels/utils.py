@@ -15,4 +15,6 @@ def copy_fields(src, to):
 
 
 get_content_type = partial(ContentType.objects.get_for_model, for_concrete_model=False)
-get_content_types = partial(ContentType.objects.get_for_models, for_concrete_models=False)
+get_content_types = partial(
+    ContentType.objects.get_for_models, for_concrete_models=False
+)

@@ -10,10 +10,13 @@ class TestCase(TestCase):
 
     def assertQuerysetEqual(self, qs, values, transform=None, ordered=True, msg=None):
         if self.DJANGO_GTE_42:
-            super().assertQuerySetEqual(qs, values, transform=transform or repr, ordered=ordered, msg=msg)
+            super().assertQuerySetEqual(
+                qs, values, transform=transform or repr, ordered=ordered, msg=msg
+            )
         else:
-            super().assertQuerysetEqual(qs, values, transform=transform or repr, ordered=ordered, msg=msg)
-        
+            super().assertQuerysetEqual(
+                qs, values, transform=transform or repr, ordered=ordered, msg=msg
+            )
 
     def tearDown(self):
         ContentType.objects.clear_cache()

@@ -25,7 +25,7 @@ class PolymorphicQuerySetTest(TestCase):
             animals.query.select_related, animals_expected_query_select_related
         )
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(
+            self.assertQuerySetEqual(
                 animals.all(),
                 [
                     "<Animal: animal>",
@@ -35,9 +35,10 @@ class PolymorphicQuerySetTest(TestCase):
                     "<BigSnake: big snake>",
                     "<HugeSnake: huge snake>",
                 ],
+                transform=repr,
             )
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(
+            self.assertQuerySetEqual(
                 list(animals.iterator()),
                 [
                     "<Animal: animal>",
@@ -47,6 +48,7 @@ class PolymorphicQuerySetTest(TestCase):
                     "<BigSnake: big snake>",
                     "<HugeSnake: huge snake>",
                 ],
+                transform=repr,
             )
         # Filter out non-mammal (direct subclass)
         animal_mammals = Animal.objects.select_subclasses(Mammal)
@@ -56,32 +58,37 @@ class PolymorphicQuerySetTest(TestCase):
             animal_mammals_expected_query_select_related,
         )
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(
-                animal_mammals.all(), ["<Mammal: mammal>", "<Monkey: monkey>"]
+            self.assertQuerySetEqual(
+                animal_mammals.all(),
+                ["<Mammal: mammal>", "<Monkey: monkey>"],
+                transform=repr,
             )
         # Filter out non-snake (subclass through an abstract one)
         animal_snakes = Animal.objects.select_subclasses(Snake)
         self.assertEqual(animal_snakes.query.select_related, {"snake": {}})
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(
+            self.assertQuerySetEqual(
                 animal_snakes.all(),
                 ["<Snake: snake>", "<BigSnake: big snake>", "<HugeSnake: huge snake>"],
+                transform=repr,
             )
         # Subclass with only proxies
         snakes = Snake.objects.select_subclasses()
         self.assertFalse(snakes.query.select_related)
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(
+            self.assertQuerySetEqual(
                 snakes.all(),
                 ["<Snake: snake>", "<BigSnake: big snake>", "<HugeSnake: huge snake>"],
+                transform=repr,
             )
         # Subclass filter proxies
         snake_bigsnakes = Snake.objects.select_subclasses(BigSnake)
         self.assertFalse(snakes.query.select_related)
         with self.assertNumQueries(1):
-            self.assertQuerysetEqual(
+            self.assertQuerySetEqual(
                 snake_bigsnakes.all(),
                 ["<BigSnake: big snake>", "<HugeSnake: huge snake>"],
+                transform=repr,
             )
 
     def test_select_subclasses_get(self):
@@ -90,7 +97,7 @@ class PolymorphicQuerySetTest(TestCase):
 
     def test_select_subclasses_values(self):
         Animal.objects.create(name="animal")
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             Animal.objects.select_subclasses().values_list("name", flat=True),
             ["animal"],
             lambda x: x,
@@ -101,15 +108,20 @@ class PolymorphicQuerySetTest(TestCase):
         Mammal.objects.create(name="first mammal")
         Mammal.objects.create(name="second mammal")
         Monkey.objects.create(name="donkey kong")
-        self.assertQuerysetEqual(
-            Animal.objects.exclude_subclasses(), ["<Animal: animal>"]
+        self.assertQuerySetEqual(
+            Animal.objects.exclude_subclasses(),
+            ["<Animal: animal>"],
+            transform=repr,
         )
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             Mammal.objects.exclude_subclasses(),
             ["<Mammal: first mammal>", "<Mammal: second mammal>"],
+            transform=repr,
         )
-        self.assertQuerysetEqual(
-            Monkey.objects.exclude_subclasses(), ["<Monkey: donkey kong>"]
+        self.assertQuerySetEqual(
+            Monkey.objects.exclude_subclasses(),
+            ["<Monkey: donkey kong>"],
+            transform=repr,
         )
 
     def test_select_subclasses_prefetch_related(self):
@@ -177,11 +189,18 @@ class PolymorphicManagerTest(TestCase):
         Snake.objects.create(name="snake", length=1)
         BigSnake.objects.create(name="big snake", length=10)
         HugeSnake.objects.create(name="huge snake", length=100)
-        self.assertQuerysetEqual(
+        self.assertQuerySetEqual(
             Snake.objects.all(),
             ["<Snake: snake>", "<Snake: big snake>", "<Snake: huge snake>"],
+            transform=repr,
         )
-        self.assertQuerysetEqual(
-            BigSnake.objects.all(), ["<BigSnake: big snake>", "<BigSnake: huge snake>"]
+        self.assertQuerySetEqual(
+            BigSnake.objects.all(),
+            ["<BigSnake: big snake>", "<BigSnake: huge snake>"],
+            transform=repr,
         )
-        self.assertQuerysetEqual(HugeSnake.objects.all(), ["<HugeSnake: huge snake>"])
+        self.assertQuerySetEqual(
+            HugeSnake.objects.all(),
+            ["<HugeSnake: huge snake>"],
+            transform=repr,
+        )
